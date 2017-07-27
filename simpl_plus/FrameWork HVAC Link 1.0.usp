@@ -1,0 +1,173 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+*/
+
+#SYMBOL_NAME "FrameWork HVAC Link 1.0"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+#DEFINE_CONSTANT SP_UP       1
+#DEFINE_CONSTANT SP_DOWN     2
+#DEFINE_CONSTANT SM_OFF      3
+#DEFINE_CONSTANT SM_COOL     4
+#DEFINE_CONSTANT SM_HEAT     5
+#DEFINE_CONSTANT SM_AUTO     6
+#DEFINE_CONSTANT FM_ON       7
+#DEFINE_CONSTANT FM_AUTO     8
+#DEFINE_CONSTANT FS_LOW      9
+#DEFINE_CONSTANT FS_MED      10
+#DEFINE_CONSTANT FS_HI       11
+#DEFINE_CONSTANT FS_MAX      12
+#DEFINE_CONSTANT SM_OFF_FB   13
+#DEFINE_CONSTANT SM_COOL_FB  14
+#DEFINE_CONSTANT SM_HEAT_FB  15
+#DEFINE_CONSTANT SM_AUTO_FB  16
+#DEFINE_CONSTANT FM_ON_FB    17
+#DEFINE_CONSTANT FM_AUTO_FB  18
+#DEFINE_CONSTANT FS_LOW_FB   19
+#DEFINE_CONSTANT FS_MED_FB   20
+#DEFINE_CONSTANT FS_HI_FB    21
+#DEFINE_CONSTANT FS_MAX_FB   22
+#DEFINE_CONSTANT COOLCALL_FB 23
+#DEFINE_CONSTANT HEATCALL_FB 24
+#DEFINE_CONSTANT FANCALL_FB  25
+#DEFINE_CONSTANT T_SETPOINT  26
+#DEFINE_CONSTANT T_AMBIENT   27
+
+#DEFINE_CONSTANT TYPE_AUTO         1
+#DEFINE_CONSTANT TYPE_HEATCOOL     2
+#DEFINE_CONSTANT TYPE_HEATCOOLAUTO 3
+
+//=====// I/O //=====//
+
+DIGITAL_INPUT  _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   SystemMode_Off_Fb,
+			   SystemMode_Cool_Fb,
+			   SystemMode_Heat_Fb,
+			   SystemMode_Auto_Fb,
+			   FanMode_Auto_Fb,
+			   FanMode_On_Fb,
+			   FanSpeed_Low_Fb,
+			   FanSpeed_Medium_Fb,
+			   FanSpeed_High_Fb,
+			   FanSpeed_Max_Fb;
+
+DIGITAL_OUTPUT _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   Setpoint_Up,
+			   Setpoint_Down,
+			   SystemMode_Off,
+			   SystemMode_Cool,
+			   SystemMode_Heat,
+			   SystemMode_Auto,
+			   FanMode_Auto,
+			   FanMode_On,
+			   FanSpeed_Low,
+			   FanSpeed_Medium,
+			   FanSpeed_High,
+			   FanSpeed_Max;
+
+ANALOG_INPUT   Setpoint_Temp,
+			   Ambient_Temp;
+
+STRING_PARAMETER  HVAC_Name[32];
+
+INTEGER_PARAMETER HVAC_ID,
+				  HVAC_Type,
+				  HasFanModeControl,
+				  HasFanSpeedControl;
+
+//=====// VARIABLES //=====//
+
+HVAC ac;
+
+//=====// FUNCTIONS //=====//
+
+CALLBACK FUNCTION TriggerSendCommandHandler (INTEGER _action, INTEGER _state) {
+
+	SWITCH (_action) {
+     
+		CASE(SP_UP): {
+        	Setpoint_Up     = _state;
+		}
+		CASE(SP_DOWN): {
+        	Setpoint_Down   = _state;
+		}
+		CASE(SM_OFF): {
+        	SystemMode_Off  = _state;
+		}
+		CASE(SM_COOL): {
+        	SystemMode_Cool = _state;
+		}
+		CASE(SM_HEAT): {
+            SystemMode_Heat = _state;
+		}
+		CASE(SM_AUTO): {
+            SystemMode_Auto = _state;
+		}
+		CASE(FM_ON): {
+            FanMode_On      = _state; 
+		}
+		CASE(FM_AUTO): {
+            FanMode_Auto    = _state;
+		}
+		CASE(FS_LOW): {
+            FanSpeed_Low    = _state;
+		}
+		CASE(FS_MED): {
+            FanSpeed_Medium = _state;
+		}
+		CASE(FS_HI): {
+            FanSpeed_High   = _state;
+		}
+		CASE(FS_MAX): {
+            FanSpeed_Max    = _state;
+		}
+
+	}
+
+}
+
+//=====// EVENTS //=====//
+
+CHANGE SystemMode_Off_Fb  { ac.FeedbackEvent(SM_OFF_FB, SystemMode_Off_Fb); }
+CHANGE SystemMode_Cool_Fb { ac.FeedbackEvent(SM_COOL_FB, SystemMode_Cool_Fb); }
+CHANGE SystemMode_Heat_Fb { ac.FeedbackEvent(SM_HEAT_FB, SystemMode_Heat_Fb); }
+CHANGE SystemMode_Auto_Fb { ac.FeedbackEvent(SM_AUTO_FB, SystemMode_Auto_Fb); }
+
+CHANGE FanMode_Auto_Fb    { ac.FeedbackEvent(FM_AUTO_FB, FanMode_Auto_Fb); }
+CHANGE FanMode_On_Fb      { ac.FeedbackEvent(FM_ON_FB, FanMode_On_Fb); }
+
+CHANGE FanSpeed_Low_Fb    { ac.FeedbackEvent(FS_LOW_FB, FanSpeed_Low_Fb); }
+CHANGE FanSpeed_Medium_Fb { ac.FeedbackEvent(FS_MED_FB, FanSpeed_Medium_Fb); }
+CHANGE FanSpeed_High_Fb   { ac.FeedbackEvent(FS_HI_FB, FanSpeed_High_Fb); }
+CHANGE FanSpeed_Max_Fb    { ac.FeedbackEvent(FS_MAX_FB, FanSpeed_Max_Fb); }
+
+CHANGE Setpoint_Temp      { ac.FeedbackEvent(T_SETPOINT, Setpoint_Temp); }
+CHANGE Ambient_Temp       { ac.FeedbackEvent(T_AMBIENT, Ambient_Temp); }
+
+//=====// MAIN //=====//
+
+FUNCTION Main () {
+
+	WAITFORINITIALIZATIONCOMPLETE ();
+
+	ac.CreateHVAC (HVAC_ID, HVAC_Name, HVAC_Type, HasFanModeControl, HasFanSpeedControl);
+
+	REGISTERDELEGATE (ac, TriggerSendCommand, TriggerSendCommandHandler);
+
+	IF (Core.RegisterHVAC (ac) > 0) {
+    	// Success!
+	}
+
+}

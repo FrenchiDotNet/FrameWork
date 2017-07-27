@@ -1,0 +1,1097 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+*/
+
+#SYMBOL_NAME "FrameWork Interface Link 1.2e"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#PRINT_TO_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+#DEFINE_CONSTANT TARGET_SSHARP_VERSION "1.2e" 
+
+#DEFINE_CONSTANT TRUE 1
+#DEFINE_CONSTANT FALSE 0
+
+#DEFINE_CONSTANT ZONELISTSIZE        48
+#DEFINE_CONSTANT SOURCELISTSIZE      24
+#DEFINE_CONSTANT SOURCELISTVISIBLE    8
+#DEFINE_CONSTANT LIGHTLOADLISTSIZE   24
+#DEFINE_CONSTANT LIGHTPRESETLISTSIZE  5
+#DEFINE_CONSTANT SHADELISTSIZE       12
+#DEFINE_CONSTANT HVACLISTSIZE         4
+
+#DEFINE_CONSTANT DJ_POPUPDISPLAYCMD        7
+#DEFINE_CONSTANT DJ_POPUPLIFTCMD           8
+#DEFINE_CONSTANT DJ_POPUPAVRCMD            9
+#DEFINE_CONSTANT DJ_MUTEFB                16
+#DEFINE_CONSTANT DJ_ENTERSETUP            21
+#DEFINE_CONSTANT DJ_SHARELISTAVAILABLE    31
+#DEFINE_CONSTANT DJ_LIGHTINGLISTAVAILABLE 32
+#DEFINE_CONSTANT DJ_SHADELISTAVAILABLE    33
+#DEFINE_CONSTANT DJ_HVACLISTAVAILABLE     34
+
+#DEFINE_CONSTANT AJ_CURRENTZONE       1
+#DEFINE_CONSTANT AJ_CURRENTSOURCE     2
+#DEFINE_CONSTANT AJ_ZONELISTITEMS     3
+#DEFINE_CONSTANT AJ_LISTENITEMS       4
+#DEFINE_CONSTANT AJ_WATCHITEMS        5
+#DEFINE_CONSTANT AJ_SYSMENUITEMS      6
+#DEFINE_CONSTANT AJ_SHAREITEMS        7
+#DEFINE_CONSTANT AJ_VOLUMEFB         16
+#DEFINE_CONSTANT AJ_ZONELISTICONS    30
+#DEFINE_CONSTANT AJ_LIGHTLOADCOUNT   32
+#DEFINE_CONSTANT AJ_LIGHTPRESETCOUNT 33
+#DEFINE_CONSTANT AJ_SHADECOUNT       35
+#DEFINE_CONSTANT AJ_HVACCOUNT        36
+
+#DEFINE_CONSTANT SJ_CURRENTZONENAME   1
+#DEFINE_CONSTANT SJ_CURRENTSOURCENAME 2
+#DEFINE_CONSTANT SJ_LISTENLISTFB      3
+#DEFINE_CONSTANT SJ_WATCHLISTFB       4
+
+// Lights
+
+#DEFINE_CONSTANT LL_OFF     1
+#DEFINE_CONSTANT LL_ON      2
+#DEFINE_CONSTANT LL_RAISE   3
+#DEFINE_CONSTANT LL_LOWER   4
+#DEFINE_CONSTANT LL_TOGGLE  6
+#DEFINE_CONSTANT LL_LEVEL  10
+
+#DEFINE_CONSTANT LTYPE_SINGLE       1
+#DEFINE_CONSTANT LTYPE_ONOFF        2
+#DEFINE_CONSTANT LTYPE_DIM          3
+#DEFINE_CONSTANT LTYPE_DIMTOGGLE    4
+#DEFINE_CONSTANT LTYPE_SLIDER       5
+#DEFINE_CONSTANT LTYPE_SLIDERTOGGLE 6
+
+// Shades
+
+#DEFINE_CONSTANT SA_UP     1
+#DEFINE_CONSTANT SA_DOWN   2
+#DEFINE_CONSTANT SA_TOGGLE 3
+#DEFINE_CONSTANT SA_STOP   4
+#DEFINE_CONSTANT SA_VIEW   5
+
+#DEFINE_CONSTANT SF_UP     11
+#DEFINE_CONSTANT SF_DOWN   12
+#DEFINE_CONSTANT SF_STOP   13
+#DEFINE_CONSTANT SF_MOVING 14
+
+#DEFINE_CONSTANT ST_TOGGLE         1
+#DEFINE_CONSTANT ST_UPDOWN         2
+#DEFINE_CONSTANT ST_UPDOWNSTOP     3
+#DEFINE_CONSTANT ST_UPDOWNSTOPVIEW 4
+
+// HVAC
+
+#DEFINE_CONSTANT SP_UP       1
+#DEFINE_CONSTANT SP_DOWN     2
+#DEFINE_CONSTANT SM_OFF      3
+#DEFINE_CONSTANT SM_COOL     4
+#DEFINE_CONSTANT SM_HEAT     5
+#DEFINE_CONSTANT SM_AUTO     6
+#DEFINE_CONSTANT FM_ON       7
+#DEFINE_CONSTANT FM_AUTO     8
+#DEFINE_CONSTANT FS_LOW      9
+#DEFINE_CONSTANT FS_MED      10
+#DEFINE_CONSTANT FS_HI       11
+#DEFINE_CONSTANT FS_MAX      12
+#DEFINE_CONSTANT SM_OFF_FB   13
+#DEFINE_CONSTANT SM_COOL_FB  14
+#DEFINE_CONSTANT SM_HEAT_FB  15
+#DEFINE_CONSTANT SM_AUTO_FB  16
+#DEFINE_CONSTANT FM_ON_FB    17
+#DEFINE_CONSTANT FM_AUTO_FB  18
+#DEFINE_CONSTANT FS_LOW_FB   19
+#DEFINE_CONSTANT FS_MED_FB   20
+#DEFINE_CONSTANT FS_HI_FB    21
+#DEFINE_CONSTANT FS_MAX_FB   22
+#DEFINE_CONSTANT COOLCALL_FB 23
+#DEFINE_CONSTANT HEATCALL_FB 24
+#DEFINE_CONSTANT FANCALL_FB  25
+#DEFINE_CONSTANT T_SETPOINT  26
+#DEFINE_CONSTANT T_AMBIENT   27
+
+#DEFINE_CONSTANT HTYPE_AUTO         1
+#DEFINE_CONSTANT HTYPE_HEATCOOL     2
+#DEFINE_CONSTANT HTYPE_HEATCOOLAUTO 3
+
+//=====// I/O //=====//
+
+DIGITAL_INPUT _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_, 
+			  _SKIP_,
+			  _SKIP_,
+			  PowerOff_Zone,
+			  PowerOff_All,
+			  Zone_VolumeUp,
+			  Zone_VolumeDown,
+			  Zone_Mute,
+			  ZoneList[ZONELISTSIZE],
+			  SourceList_Listen[SOURCELISTSIZE],
+			  SourceList_Watch[SOURCELISTSIZE],
+			  SysMenu_Button[4],
+			  ShareList_Button[ZONELISTSIZE],
+			  ShareList_Mute[ZONELISTSIZE],
+			  ShareList_VolumeUp[ZONELISTSIZE],
+			  ShareList_VolumeDown[ZONELISTSIZE],
+			  TVControl_Button[32],
+			  LiftControl_Button[6],
+			  LightingLoad_On[LIGHTLOADLISTSIZE],
+			  LightingLoad_Off[LIGHTLOADLISTSIZE],
+			  LightingLoad_Toggle[LIGHTLOADLISTSIZE],
+			  LightingLoad_Raise[LIGHTLOADLISTSIZE],
+			  LightingLoad_Lower[LIGHTLOADLISTSIZE],
+			  LightingPreset_Button[LIGHTPRESETLISTSIZE],
+			  Shade_Up[SHADELISTSIZE],
+			  Shade_Down[SHADELISTSIZE],
+			  Shade_Toggle[SHADELISTSIZE],
+			  Shade_Stop[SHADELISTSIZE],
+			  Shade_View[SHADELISTSIZE],
+			  HVAC_Setpoint_Up[HVACLISTSIZE],
+			  HVAC_Setpoint_Down[HVACLISTSIZE],
+			  HVAC_SystemMode_Off[HVACLISTSIZE],
+			  HVAC_SystemMode_Cool[HVACLISTSIZE],
+			  HVAC_SystemMode_Heat[HVACLISTSIZE],
+			  HVAC_SystemMode_Auto[HVACLISTSIZE],
+			  HVAC_FanMode_On[HVACLISTSIZE],
+			  HVAC_FanMode_Auto[HVACLISTSIZE],
+			  HVAC_FanSpeed_Low[HVACLISTSIZE],
+			  HVAC_FanSpeed_Medium[HVACLISTSIZE],
+			  HVAC_FanSpeed_High[HVACLISTSIZE],
+			  HVAC_FanSpeed_Max[HVACLISTSIZE];
+
+DIGITAL_OUTPUT _SKIP_,
+			   _SKIP_,
+			   _SKIP_, 
+			   _SKIP_, 
+			   _SKIP_,
+			   _SKIP_,
+			   Show_ListenList_Button,
+			   Show_WatchList_Button,
+			   Show_ShareList_Button,
+			   Show_Shades_Button,
+			   Show_HVAC_Button,
+			   Request_TVControl_Popup,
+			   Request_LiftControl_Popup,
+			   Request_AVRControl_Popup,
+			   Enter_Setup,
+			   Zone_Mute_Fb,        
+			   ZoneList_Fb[ZONELISTSIZE],
+			   SourceList_Listen_Fb[SOURCELISTSIZE],
+			   SourceList_Listen_Visible[SOURCELISTSIZE],
+			   SourceList_Watch_Fb[SOURCELISTSIZE],
+			   SourceList_Watch_Visible[SOURCELISTSIZE],
+			   ShareList_Button_Fb[ZONELISTSIZE],
+			   ShareList_Mute_Fb[ZONELISTSIZE],
+			   TVControl_Visible[10],
+			   LiftControl_Button_Fb[6],
+			   LightingLoad_On_Fb[LIGHTLOADLISTSIZE],
+			   LightingLoad_Visible[LIGHTLOADLISTSIZE],
+			   LightingLoad_Type_Single[LIGHTLOADLISTSIZE],
+			   LightingLoad_Type_OnOff[LIGHTLOADLISTSIZE],
+			   LightingLoad_Type_DimOnly[LIGHTLOADLISTSIZE],
+			   LightingLoad_Type_DimToggle[LIGHTLOADLISTSIZE],
+			   LightingLoad_Type_Slider[LIGHTLOADLISTSIZE],
+			   LightingLoad_Type_SliderToggle[LIGHTLOADLISTSIZE],
+			   LightingPreset_On_Fb[LIGHTPRESETLISTSIZE],
+			   LightingPreset_Visible[LIGHTPRESETLISTSIZE],
+			   Shade_Up_Fb[SHADELISTSIZE],
+			   Shade_Down_Fb[SHADELISTSIZE],
+			   Shade_Stop_Fb[SHADELISTSIZE],
+			   Shade_Moving_Fb[SHADELISTSIZE],
+			   Shade_Type_Toggle[SHADELISTSIZE],
+			   Shade_Type_UpDown[SHADELISTSIZE],
+			   Shade_Type_UpDownStop[SHADELISTSIZE],
+			   Shade_Type_UpDownStopView[SHADELISTSIZE],
+			   HVAC_SystemMode_Off_Fb[HVACLISTSIZE],
+			   HVAC_SystemMode_Cool_Fb[HVACLISTSIZE],
+			   HVAC_SystemMode_Heat_Fb[HVACLISTSIZE],
+			   HVAC_SystemMode_Auto_Fb[HVACLISTSIZE],
+			   HVAC_FanMode_On_Fb[HVACLISTSIZE],
+			   HVAC_FanMode_Auto_Fb[HVACLISTSIZE],
+			   HVAC_FanSpeed_Low_Fb[HVACLISTSIZE],
+			   HVAC_FanSpeed_Medium_Fb[HVACLISTSIZE],
+			   HVAC_FanSpeed_High_Fb[HVACLISTSIZE],
+			   HVAC_FanSpeed_Max_Fb[HVACLISTSIZE],
+			   HVAC_CoolCall_Fb[HVACLISTSIZE],
+			   HVAC_HeatCall_Fb[HVACLISTSIZE],
+			   HVAC_FanCall_Fb[HVACLISTSIZE],
+			   HVAC_Show_Modes_AutoOff[HVACLISTSIZE],
+			   HVAC_Show_Modes_HeatCool[HVACLISTSIZE],
+			   HVAC_Show_Modes_HeatCoolAuto[HVACLISTSIZE],
+			   HVAC_Show_FanModes[HVACLISTSIZE],
+			   HVAC_Show_FanSpeeds[HVACLISTSIZE];
+
+ANALOG_OUTPUT CurrentZone,
+			  CurrentSource,
+			  Zone_Volume_Fb,
+			  ZoneList_NumberOfItems,
+			  SourceList_Listen_NumberOfItems,
+			  SourceList_Watch_NumberOfItems,
+			  SysMenu_NumberOfItems,
+			  ShareList_NumberOfItems,
+			  LightingLoad_NumberOfItems,
+			  LightingPreset_NumberOfItems,
+			  ShadeList_NumberOfItems,
+			  HVACList_NumberOfItems;
+
+STRING_OUTPUT Current_Zone_Name,
+			  Current_Source_Name;
+
+ANALOG_OUTPUT ZoneList_Icons[ZONELISTSIZE],
+			  SourceList_Listen_Icons[SOURCELISTSIZE],
+			  SourceList_Watch_Icons[SOURCELISTSIZE], 
+			  SysMenu_Icon[4],
+			  ShareList_Volume_Fb[ZONELISTSIZE],
+			  LightingLoad_Level[LIGHTLOADLISTSIZE],
+			  HVAC_Setpoint_Temp[HVACLISTSIZE],
+			  HVAC_Ambient_Temp[HVACLISTSIZE];
+
+STRING_OUTPUT ZoneList_Label[ZONELISTSIZE],
+			  ZoneList_Source[ZONELISTSIZE],
+			  SourceList_Listen_Label[SOURCELISTSIZE],
+              SourceList_Watch_Label[SOURCELISTSIZE],
+			  SysMenu_Label[4],
+			  ShareList_Label[ZONELISTSIZE],
+			  TVControl_Label[10],
+			  LightingLoad_Name[LIGHTLOADLISTSIZE],
+			  LightingPreset_Name[LIGHTPRESETLISTSIZE],
+			  Shade_Name[SHADELISTSIZE],
+			  HVAC_Name[HVACLISTSIZE];
+
+INTEGER_PARAMETER InterfaceID, 
+				  DefaultZoneID,
+				  InvertSourceLists;
+
+STRING_PARAMETER  InterfaceName[24], 
+				  AvailableZones[192], 
+				  ShareZones[192];
+
+#BEGIN_PARAMETER_PROPERTIES InvertSourceLists
+	PROPLIST = { 0d,"False" },{ 1d,"True" };
+#END_PARAMETER_PROPERTIES
+
+//=====// VARIABLES //=====//
+
+Interface int;
+
+//=====// FUNCTIONS //=====//
+
+FUNCTION ParseSourceListFb(INTEGER _type, STRING _states) {
+	INTEGER i, ch;
+
+	FOR(i = 1 TO SOURCELISTSIZE) {
+		ch = GETC(_states);
+    	IF(ch = '0') { // Output Low
+        	IF(_type = 0) // Listen
+            	SourceList_Listen_Fb[i] = FALSE;
+			ELSE
+                SourceList_Watch_Fb[i] = FALSE;
+		} ELSE IF(ch = '1') { // Output High
+            IF(_type = 0) // Listen
+            	SourceList_Listen_Fb[i] = TRUE;
+			ELSE
+				SourceList_Watch_Fb[i] = TRUE;
+		}
+	}
+}
+
+CALLBACK FUNCTION UpdateDigitalOutputHandler(INTEGER _join, INTEGER _state) {
+	SWITCH(_join) {
+    	CASE(DJ_ENTERSETUP): {	
+        	PULSE(10, Enter_Setup);
+		}
+		CASE(DJ_SHARELISTAVAILABLE): {
+        	Show_ShareList_Button = _state;
+		}
+		CASE(DJ_HVACLISTAVAILABLE): {
+        	Show_HVAC_Button = _state;
+		}
+		CASE(DJ_MUTEFB): {
+            Zone_Mute_Fb = _state;
+		}
+		CASE(DJ_POPUPDISPLAYCMD): {
+        	PULSE(10, Request_TVControl_Popup);
+		}
+		CASE(DJ_POPUPLIFTCMD): {
+        	PULSE(10, Request_LiftControl_Popup);
+		}
+		CASE(DJ_POPUPAVRCMD): {
+        	PULSE(10, Request_AVRControl_Popup);
+		}
+	}
+}
+
+CALLBACK FUNCTION UpdateAnalogOutputHandler(INTEGER _join, INTEGER _val) {
+	SWITCH(_join) {
+    	CASE(AJ_CURRENTZONE): {
+        	CurrentZone = _val;
+		}
+		CASE(AJ_CURRENTSOURCE): {
+            CurrentSource = _val;
+		}
+		CASE(AJ_ZONELISTITEMS): {
+        	ZoneList_NumberOfItems = _val;		
+		}
+		CASE(AJ_LISTENITEMS): {
+			// Show/Hide Listen button
+			IF(_val > 0)
+				Show_ListenList_Button = TRUE;
+			ELSE
+				Show_ListenList_Button = FALSE;
+
+			// Set number of list items to display
+			IF(_val <> 0 && _val < SOURCELISTVISIBLE && InvertSourceLists = 1)
+            	SourceList_Listen_NumberOfItems = SOURCELISTVISIBLE;
+			ELSE
+				SourceList_Listen_NumberOfItems = _val;
+		}
+		CASE(AJ_WATCHITEMS): {
+			// Show/Hide Watch button
+			IF(_val > 0)
+				Show_WatchList_Button = TRUE;
+			ELSE
+				Show_WatchList_Button = FALSE;
+
+			// Set number of list items to display
+			IF(_val <> 0 &&_val < SOURCELISTVISIBLE && InvertSourceLists = 1)
+            	SourceList_Watch_NumberOfItems = SOURCELISTVISIBLE;
+			ELSE
+				SourceList_Watch_NumberOfItems = _val;
+		}
+		CASE(AJ_SYSMENUITEMS): {
+        	SysMenu_NumberOfItems = _val;
+		}
+		CASE(AJ_SHAREITEMS): {
+        	ShareList_NumberOfItems = _val;
+		}
+		CASE(AJ_VOLUMEFB): {
+        	Zone_Volume_Fb = _val;
+		}
+		CASE(AJ_LIGHTLOADCOUNT): {
+        	LightingLoad_NumberOfItems = _val;
+		}
+		CASE(AJ_LIGHTPRESETCOUNT): {
+        	LightingPreset_NumberOfItems = _val;
+		}
+		CASE(AJ_SHADECOUNT): {
+            ShadeList_NumberOfItems = _val;
+			
+			// Show/Hide Shades button
+			IF (_val > 0) {
+            	Show_Shades_Button = 1;
+			} ELSE
+				Show_Shades_Button = 0;
+		}
+		CASE(AJ_HVACCOUNT): {
+        	HVACList_NumberOfItems = _val;
+		}
+	}
+}
+
+CALLBACK FUNCTION UpdateStringOutputHandler(INTEGER _join, STRING _str) {
+	SWITCH(_join) {
+    	CASE(SJ_CURRENTZONENAME): {
+        	Current_Zone_Name = _str;
+		}
+		CASE(SJ_CURRENTSOURCENAME): {
+			IF(_str <> "Off")
+            	Current_Source_Name = _str;
+			ELSE
+				Current_Source_Name = "";
+		}
+		CASE(SJ_LISTENLISTFB): {
+        	ParseSourceListFb(0, _str);
+		}
+		CASE(SJ_WATCHLISTFB): {
+            ParseSourceListFb(1, _str);
+		}
+	}
+}
+
+CALLBACK FUNCTION ZoneListUpdateHandler(INTEGER _pos, INTEGER _sic, STRING _znm, STRING _snm) {
+	ZoneList_Label[_pos+1]  = _znm;
+	ZoneList_Icons[_pos+1]  = _sic;
+	ZoneList_Source[_pos+1] = _snm;
+}
+
+CALLBACK FUNCTION SourceListUpdateHandler(INTEGER _pos, INTEGER _type, INTEGER _sic, STRING _snm) {
+	IF(_type = 1) { // Listen Source
+    	SourceList_Listen_Icons[_pos+1] = _sic;
+		SourceList_Listen_Label[_pos+1] = _snm;
+		IF(_snm = "")
+			SourceList_Listen_Visible[_pos+1] = FALSE;
+		ELSE
+			SourceList_Listen_Visible[_pos+1] = TRUE;
+	} ELSE IF(_type = 2) { // Watch Source
+        SourceList_Watch_Icons[_pos+1] = _sic;
+		SourceList_Watch_Label[_pos+1] = _snm;
+		IF(_snm = "")
+			SourceList_Watch_Visible[_pos+1] = FALSE;
+		ELSE
+			SourceList_Watch_Visible[_pos+1] = TRUE;
+	}
+}
+
+CALLBACK FUNCTION SysMenuListUpdateHandler(INTEGER _position, STRING _label, INTEGER _icon) {
+	SysMenu_Label[_position+1] = _label;
+	SysMenu_Icon[_position+1]  = _icon;
+}
+
+CALLBACK FUNCTION LightingLoadListUpdateHandler(INTEGER _position, STRING _label, INTEGER _type) {
+
+	IF (_type = 0) {
+
+    	LightingLoad_Name[_position]              = "";
+		LightingLoad_On_Fb[_position]             = 0;
+		LightingLoad_Level[_position]             = 0;
+		LightingLoad_Visible[_position]           = 0;
+		LightingLoad_Type_Single[_position]       = 0;
+		LightingLoad_Type_OnOff[_position]        = 0;
+		LightingLoad_Type_DimOnly[_position]      = 0;
+		LightingLoad_Type_DimToggle[_position]    = 0;
+		LightingLoad_Type_Slider[_position]       = 0;
+		LightingLoad_Type_SliderToggle[_position] = 0;
+
+	} ELSE {
+
+		LightingLoad_Name[_position]    = _label;
+		LightingLoad_Visible[_position] = 1;
+		LightingLoad_On_Fb[_position]   = 0;
+
+		SWITCH(_type) {
+
+        	CASE(LTYPE_SINGLE): {
+            	LightingLoad_Type_Single[_position]       = 1;
+				LightingLoad_Type_OnOff[_position]        = 0;
+				LightingLoad_Type_DimOnly[_position]      = 0;
+				LightingLoad_Type_DimToggle[_position]    = 0;
+				LightingLoad_Type_Slider[_position]       = 0;
+				LightingLoad_Type_SliderToggle[_position] = 0;
+			}
+			CASE(LTYPE_ONOFF): {
+				LightingLoad_Type_Single[_position]       = 0;
+				LightingLoad_Type_OnOff[_position]        = 1;
+				LightingLoad_Type_DimOnly[_position]      = 0;
+				LightingLoad_Type_DimToggle[_position]    = 0;
+				LightingLoad_Type_Slider[_position]       = 0;
+				LightingLoad_Type_SliderToggle[_position] = 0;
+			}
+			CASE(LTYPE_DIM): {
+            	LightingLoad_Type_Single[_position]       = 0;
+				LightingLoad_Type_OnOff[_position]        = 0;
+				LightingLoad_Type_DimOnly[_position]      = 1;
+				LightingLoad_Type_DimToggle[_position]    = 0;
+				LightingLoad_Type_Slider[_position]       = 0;
+				LightingLoad_Type_SliderToggle[_position] = 0;
+			}
+			CASE(LTYPE_DIMTOGGLE): {
+            	LightingLoad_Type_Single[_position]       = 0;
+				LightingLoad_Type_OnOff[_position]        = 0;
+				LightingLoad_Type_DimOnly[_position]      = 0;
+				LightingLoad_Type_DimToggle[_position]    = 1;
+				LightingLoad_Type_Slider[_position]       = 0;
+				LightingLoad_Type_SliderToggle[_position] = 0;
+			}
+			CASE(LTYPE_SLIDER): {
+            	LightingLoad_Type_Single[_position]       = 0;
+				LightingLoad_Type_OnOff[_position]        = 0;
+				LightingLoad_Type_DimOnly[_position]      = 0;
+				LightingLoad_Type_DimToggle[_position]    = 0;
+				LightingLoad_Type_Slider[_position]       = 1;
+				LightingLoad_Type_SliderToggle[_position] = 0;
+			}
+			CASE(LTYPE_SLIDERTOGGLE): {
+            	LightingLoad_Type_Single[_position]       = 0;
+				LightingLoad_Type_OnOff[_position]        = 0;
+				LightingLoad_Type_DimOnly[_position]      = 0;
+				LightingLoad_Type_DimToggle[_position]    = 0;
+				LightingLoad_Type_Slider[_position]       = 0;
+				LightingLoad_Type_SliderToggle[_position] = 1;
+			}
+
+		}
+
+	}
+}
+
+CALLBACK FUNCTION LightingPresetListUpdateHandler(INTEGER _position, STRING _label, INTEGER _active) {
+
+   	IF (_active = 0) {
+
+    	LightingPreset_Name[_position]              = "";
+		LightingPreset_On_Fb[_position]             = 0;
+		LightingPreset_Visible[_position]           = 0;
+
+	} ELSE {
+
+		LightingPreset_Name[_position]    = _label;
+		LightingPreset_Visible[_position] = 1;
+		LightingPreset_On_Fb[_position]   = 0;
+
+	}
+
+}
+
+CALLBACK FUNCTION ShadeListUpdateHandler(INTEGER _position, STRING _label, INTEGER _type) {
+
+	Shade_Up_Fb[_position]     = 0;
+	Shade_Down_Fb[_position]   = 0;
+	Shade_Stop_Fb[_position]   = 0;
+	Shade_Moving_Fb[_position] = 0;
+
+	IF (_type = 0) {
+        
+		Shade_Name[_position]      = "";
+
+	} ELSE IF (_type = ST_TOGGLE) {
+     
+		Shade_Name[_position]                 = _label;
+		Shade_Type_Toggle[_position]          = 1;
+		Shade_Type_UpDown[_position]          = 0;
+		Shade_Type_UpDownStop[_position]      = 0;
+		Shade_Type_UpDownStopView[_position]  = 0;
+
+	} ELSE IF (_type = ST_UPDOWN) {
+     
+		Shade_Name[_position]                 = _label;
+		Shade_Type_Toggle[_position]          = 0;
+		Shade_Type_UpDown[_position]          = 1;
+		Shade_Type_UpDownStop[_position]      = 0;
+		Shade_Type_UpDownStopView[_position]  = 0;
+
+	} ELSE IF (_type = ST_UPDOWNSTOP) {
+     
+		Shade_Name[_position]                 = _label;
+		Shade_Type_Toggle[_position]          = 0;
+		Shade_Type_UpDown[_position]          = 0;
+		Shade_Type_UpDownStop[_position]      = 1;
+		Shade_Type_UpDownStopView[_position]  = 0;
+
+	} ELSE IF (_type = ST_UPDOWNSTOPVIEW) {
+     
+		Shade_Name[_position]                 = _label;
+		Shade_Type_Toggle[_position]          = 0;
+		Shade_Type_UpDown[_position]          = 0;
+		Shade_Type_UpDownStop[_position]      = 0;
+		Shade_Type_UpDownStopView[_position]  = 1;
+
+	}
+
+}
+
+CALLBACK FUNCTION HVACListUpdateHandler(INTEGER _position, STRING _label, INTEGER _type, INTEGER _hasFanMode, INTEGER _hasFanSpeed) {
+
+	// Clear feedback
+    HVAC_SystemMode_Off_Fb[_position]  = 0;
+	HVAC_SystemMode_Cool_Fb[_position] = 0;
+	HVAC_SystemMode_Heat_Fb[_position] = 0;
+	HVAC_SystemMode_Auto_Fb[_position] = 0;
+	HVAC_FanMode_On_Fb[_position]      = 0;
+	HVAC_FanMode_Auto_Fb[_position]    = 0;
+	HVAC_FanSpeed_Low_Fb[_position]    = 0;
+	HVAC_FanSpeed_Medium_Fb[_position] = 0;
+	HVAC_FanSpeed_High_Fb[_position]   = 0;
+	HVAC_FanSpeed_Max_Fb[_position]    = 0;
+	HVAC_CoolCall_Fb[_position]        = 0;
+	HVAC_HeatCall_Fb[_position]        = 0;
+	HVAC_FanCall_Fb[_position]         = 0;
+	HVAC_Setpoint_Temp[_position]      = 0;
+    HVAC_Ambient_Temp[_position]       = 0;
+
+    IF (_type = 0) {
+    
+		HVAC_Name[_position]                    = "";
+		HVAC_Show_Modes_AutoOff[_position]      = 0;
+		HVAC_Show_Modes_HeatCool[_position]     = 0;
+		HVAC_Show_Modes_HeatCoolAuto[_position] = 0;
+		HVAC_Show_FanModes[_position]           = 0;
+		HVAC_Show_FanSpeeds[_position]          = 0;
+
+	} ELSE IF (_type = HTYPE_AUTO) {
+
+		HVAC_Name[_position]                    = _label;
+		HVAC_Show_Modes_AutoOff[_position]      = 1;
+		HVAC_Show_Modes_HeatCool[_position]     = 0;
+		HVAC_Show_Modes_HeatCoolAuto[_position] = 0;
+		HVAC_Show_FanModes[_position]           = _hasFanMode;
+		HVAC_Show_FanSpeeds[_position]          = _hasFanSpeed;
+
+	} ELSE IF (_type = HTYPE_HEATCOOL) {
+
+		HVAC_Name[_position]                    = _label;
+		HVAC_Show_Modes_AutoOff[_position]      = 0;
+		HVAC_Show_Modes_HeatCool[_position]     = 1;
+		HVAC_Show_Modes_HeatCoolAuto[_position] = 0;
+		HVAC_Show_FanModes[_position]           = _hasFanMode;
+		HVAC_Show_FanSpeeds[_position]          = _hasFanSpeed;
+
+	} ELSE IF (_type = HTYPE_HEATCOOLAUTO) {
+
+		HVAC_Name[_position]                    = _label;
+		HVAC_Show_Modes_AutoOff[_position]      = 0;
+		HVAC_Show_Modes_HeatCool[_position]     = 0;
+		HVAC_Show_Modes_HeatCoolAuto[_position] = 1;
+        HVAC_Show_FanModes[_position]           = _hasFanMode;
+		HVAC_Show_FanSpeeds[_position]          = _hasFanSpeed;		
+
+	}
+
+}
+
+CALLBACK FUNCTION LightingLoadFbUpdateHandler(INTEGER _position, INTEGER _action, INTEGER _state) {
+
+	SWITCH(_action) {
+    	CASE(LL_OFF): {
+			//
+		}
+		CASE(LL_ON): {
+			LightingLoad_On_Fb[_position] = _state;
+		}
+		CASE(LL_TOGGLE): {
+			//
+		}
+		CASE(LL_RAISE): {
+			//
+		}
+		CASE(LL_LOWER): {
+			//
+		}
+		CASE(LL_LEVEL): {
+			LightingLoad_Level[_position] = _state;
+		}
+	}
+
+}
+
+CALLBACK FUNCTION LightingPresetFbUpdateHandler(INTEGER _position, INTEGER _action, INTEGER _state) {
+
+	SWITCH(_action) {
+    	CASE(LL_OFF): {
+			//
+		}
+		CASE(LL_ON): {
+			LightingPreset_On_Fb[_position] = _state;
+		}
+		CASE(LL_TOGGLE): {
+			//
+		}
+		CASE(LL_RAISE): {
+			//
+		}
+		CASE(LL_LOWER): {
+			//
+		}
+		CASE(LL_LEVEL): {
+			//		
+		}
+	}
+
+}
+
+CALLBACK FUNCTION ShadeFbUpdateHandler(INTEGER _position, INTEGER _action, INTEGER _state) {
+
+	SWITCH(_action) {
+    	CASE(SF_UP): {
+			Shade_Up_Fb[_position]     = _state;
+		}
+		CASE(SF_DOWN): {
+			Shade_Down_Fb[_position]   = _state;
+		}
+		CASE(SF_STOP): {
+			Shade_Stop_Fb[_position]   = _state;
+		}
+		CASE(SF_MOVING): {
+			Shade_Moving_Fb[_position] = _state;
+		}
+	}
+
+}
+
+CALLBACK FUNCTION HVACFbUpdateHandler(INTEGER _position, INTEGER _action, INTEGER _state) {
+
+	SWITCH(_action) {
+
+    	CASE(SM_OFF_FB): {
+			HVAC_SystemMode_Off_Fb[_position] = _state;
+		}
+    	CASE(SM_COOL_FB): {
+			HVAC_SystemMode_Cool_Fb[_position] = _state;
+		}
+    	CASE(SM_HEAT_FB): {
+			HVAC_SystemMode_Heat_Fb[_position] = _state;
+		}
+    	CASE(SM_AUTO_FB): {
+			HVAC_SystemMode_Auto_Fb[_position] = _state;
+		}
+    	CASE(FM_ON_FB): {
+			HVAC_FanMode_On_Fb[_position] = _state;
+		}
+    	CASE(FM_AUTO_FB): {
+			HVAC_FanMode_Auto_Fb[_position] = _state;
+		}
+    	CASE(FS_LOW_FB): {
+			HVAC_FanSpeed_Low_Fb[_position] = _state;
+		}
+    	CASE(FS_MED_FB): {
+			HVAC_FanSpeed_Medium_Fb[_position] = _state;
+		}
+    	CASE(FS_HI_FB): {
+			HVAC_FanSpeed_High_Fb[_position] = _state;
+		}
+    	CASE(FS_MAX_FB): {
+			HVAC_FanSpeed_Max_Fb[_position] = _state;
+		}
+    	CASE(COOLCALL_FB): {
+			HVAC_CoolCall_Fb[_position] = _state;
+		}
+    	CASE(HEATCALL_FB): {
+			HVAC_HeatCall_Fb[_position] = _state;
+		}
+    	CASE(FANCALL_FB): {
+			HVAC_FanCall_Fb[_position] = _state;
+		}
+    	CASE(T_SETPOINT): {
+			HVAC_Setpoint_Temp[_position] = _state;
+		}
+    	CASE(T_AMBIENT): {
+			HVAC_Ambient_Temp[_position] = _state;
+		}
+
+	}
+
+}
+
+ 
+CALLBACK FUNCTION TriggerSendShareListItemHandler(INTEGER position, STRING zoneName, INTEGER shareActive, INTEGER muteState, INTEGER volume) {
+	ShareList_Label[position+1] = zoneName;
+
+	IF(shareActive = FALSE)
+		ShareList_Button_Fb[position+1] = FALSE;
+	ELSE IF(shareActive = TRUE)
+		ShareList_Button_Fb[position+1] = TRUE;
+
+	IF(muteState = FALSE)
+		ShareList_Mute_Fb[position+1] = FALSE;
+	ELSE IF(muteState = TRUE)
+		ShareList_Mute_Fb[position+1] = TRUE;
+
+	ShareList_Volume_Fb[position+1] = volume;
+}
+
+CALLBACK FUNCTION TriggerSendShareMuteStateHandler(INTEGER position, INTEGER state) {
+	IF(state = TRUE)
+		ShareList_Mute_Fb[position+1] = TRUE;
+	ELSE IF(state = FALSE)
+		ShareList_Mute_Fb[position+1] = FALSE;	
+}
+
+CALLBACK FUNCTION TriggerSendShareVolumeHandler(INTEGER position, INTEGER volume) {
+	ShareList_Volume_Fb[position+1] = volume;
+}
+
+CALLBACK FUNCTION TriggerSendShareStateHandler(INTEGER position, INTEGER state) {
+	IF(state = TRUE)
+		ShareList_Button_Fb[position+1] = TRUE;
+	ELSE IF(state = FALSE)
+		ShareList_Button_Fb[position+1] = FALSE;	
+}
+
+CALLBACK FUNCTION TriggerSendDisplayControlListItemHandler(INTEGER position, STRING label, INTEGER enable) {
+	// Set button text
+	TVControl_Label[position] = label;
+	// Set button visibility
+	TVControl_Visible[position] = enable;
+}
+
+CALLBACK FUNCTION TriggerSendLiftFbHandler(INTEGER output, INTEGER state) {
+	LiftControl_Button_Fb[output] = state;
+}
+
+CALLBACK SIMPLSHARPSTRING_FUNCTION AvailableZoneRequestHandler() {
+	RETURN(AvailableZones);
+}
+
+CALLBACK SIMPLSHARPSTRING_FUNCTION ShareListRequestHandler() {
+	RETURN(ShareZones);
+}
+
+//=====// EVENTS //=====//
+
+PUSH PowerOff_Zone {
+	int.PowerOffCurrentZone();
+}
+
+PUSH PowerOff_All {
+	int.PowerOffAll();
+}
+
+PUSH Zone_VolumeUp {
+	int.ZoneVolumeEvent(1, 1);
+}
+
+RELEASE Zone_VolumeUp {
+    int.ZoneVolumeEvent(1, 0);
+}
+
+PUSH Zone_VolumeDown {
+    int.ZoneVolumeEvent(0, 1);
+}
+
+RELEASE Zone_VolumeDown {
+    int.ZoneVolumeEvent(0, 0);
+}
+
+PUSH Zone_Mute {
+    int.ZoneVolumeEvent(3, 1);
+}
+
+RELEASE Zone_Mute {
+    int.ZoneVolumeEvent(3, 0);
+}
+
+PUSH ZoneList {
+	int.ZoneListEvent(GETLASTMODIFIEDARRAYINDEX(), 1);
+}
+
+RELEASE ZoneList {
+	int.ZoneListEvent(GETLASTMODIFIEDARRAYINDEX(), 0);
+}
+
+PUSH SourceList_Listen {
+	int.SourceListEvent(GETLASTMODIFIEDARRAYINDEX()-1, 0, 1);
+}
+
+RELEASE SourceList_Listen {
+	int.SourceListEvent(GETLASTMODIFIEDARRAYINDEX()-1, 0, 0);
+}
+
+PUSH SourceList_Watch {
+	int.SourceListEvent(GETLASTMODIFIEDARRAYINDEX()-1, 1, 1);
+}
+
+RELEASE SourceList_Watch {
+	int.SourceListEvent(GETLASTMODIFIEDARRAYINDEX()-1, 1, 0);
+}
+
+PUSH SysMenu_Button {
+	int.SysMenuEvent(GETLASTMODIFIEDARRAYINDEX()-1);
+}
+
+PUSH ShareList_Button {
+	int.ShareListEvent(GETLASTMODIFIEDARRAYINDEX()-1);
+}
+
+PUSH ShareList_VolumeUp {
+	int.ShareListVolumeEvent(GETLASTMODIFIEDARRAYINDEX()-1, 1, 1);
+}
+
+RELEASE ShareList_VolumeUp {
+	int.ShareListVolumeEvent(GETLASTMODIFIEDARRAYINDEX()-1, 1, 0);
+}
+
+PUSH ShareList_VolumeDown {
+	int.ShareListVolumeEvent(GETLASTMODIFIEDARRAYINDEX()-1, 0, 1);
+}
+
+RELEASE ShareList_VolumeDown {
+	int.ShareListVolumeEvent(GETLASTMODIFIEDARRAYINDEX()-1, 0, 0);
+}
+
+PUSH ShareList_Mute {
+	int.ShareListMuteEvent(GETLASTMODIFIEDARRAYINDEX()-1);
+}
+
+PUSH TVControl_Button {
+	int.DisplayControlEvent(GETLASTMODIFIEDARRAYINDEX(), 1);
+}
+
+RELEASE TVControl_Button {
+	int.DisplayControlEvent(GETLASTMODIFIEDARRAYINDEX(), 0);
+}
+
+PUSH LiftControl_Button {
+    int.LiftControlEvent(GETLASTMODIFIEDARRAYINDEX());
+}
+
+PUSH LightingLoad_On {
+	int.LightingLoadEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_ON, 1);
+}
+
+RELEASE LightingLoad_On {
+	int.LightingLoadEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_ON, 0);
+}
+
+PUSH LightingLoad_Off {
+	int.LightingLoadEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_OFF, 1);
+}
+
+RELEASE LightingLoad_Off {
+	int.LightingLoadEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_OFF, 0);
+}
+
+PUSH LightingLoad_Toggle {
+	int.LightingLoadEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_TOGGLE, 1);
+}
+
+RELEASE LightingLoad_Toggle {
+	int.LightingLoadEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_TOGGLE, 0);
+}
+
+PUSH LightingLoad_Raise {
+	int.LightingLoadEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_RAISE, 1);
+}
+
+RELEASE LightingLoad_Raise {
+	int.LightingLoadEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_RAISE, 0);
+}
+
+PUSH LightingLoad_Lower {
+	int.LightingLoadEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_LOWER, 1);
+}
+
+RELEASE LightingLoad_Lower {
+	int.LightingLoadEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_LOWER, 0);
+}
+
+PUSH LightingPreset_Button {
+	int.LightingPresetEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_TOGGLE, 1);
+}
+
+RELEASE LightingPreset_Button {
+    int.LightingPresetEvent(GETLASTMODIFIEDARRAYINDEX()-1, LL_TOGGLE, 0);
+}
+
+PUSH Shade_Up {
+    int.ShadeEvent(GETLASTMODIFIEDARRAYINDEX()-1, SA_UP, 1);
+}
+
+RELEASE Shade_Up {
+    int.ShadeEvent(GETLASTMODIFIEDARRAYINDEX()-1, SA_UP, 0);
+}
+
+PUSH Shade_Down {
+    int.ShadeEvent(GETLASTMODIFIEDARRAYINDEX()-1, SA_DOWN, 1);
+}
+
+RELEASE Shade_Down {
+    int.ShadeEvent(GETLASTMODIFIEDARRAYINDEX()-1, SA_DOWN, 0);
+}
+
+PUSH Shade_Toggle {
+    int.ShadeEvent(GETLASTMODIFIEDARRAYINDEX()-1, SA_TOGGLE, 1);
+}
+ 
+RELEASE Shade_Toggle {
+    int.ShadeEvent(GETLASTMODIFIEDARRAYINDEX()-1, SA_TOGGLE, 0);
+}
+
+PUSH Shade_Stop {
+    int.ShadeEvent(GETLASTMODIFIEDARRAYINDEX()-1, SA_STOP, 1);
+}
+
+RELEASE Shade_Stop {
+    int.ShadeEvent(GETLASTMODIFIEDARRAYINDEX()-1, SA_STOP, 0);
+}
+
+PUSH Shade_View {
+    int.ShadeEvent(GETLASTMODIFIEDARRAYINDEX()-1, SA_VIEW, 1);
+}
+
+RELEASE Shade_View {
+    int.ShadeEvent(GETLASTMODIFIEDARRAYINDEX()-1, SA_VIEW, 0);
+}
+
+// HVAC
+
+PUSH HVAC_Setpoint_Up     { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SP_UP, 1); }
+PUSH HVAC_Setpoint_Down   { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SP_DOWN, 1); }
+PUSH HVAC_SystemMode_Off  { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_OFF, 1); }
+PUSH HVAC_SystemMode_Cool { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_COOL, 1); }
+PUSH HVAC_SystemMode_Heat { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_HEAT, 1); }
+PUSH HVAC_SystemMode_Auto { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_AUTO, 1); }
+PUSH HVAC_FanMode_On      { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FM_ON, 1); }
+PUSH HVAC_FanMode_Auto    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FM_AUTO, 1); }
+PUSH HVAC_FanSpeed_Low    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_LOW, 1); }
+PUSH HVAC_FanSpeed_Medium { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_MED, 1); }
+PUSH HVAC_FanSpeed_High   { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_HI, 1); }
+PUSH HVAC_FanSpeed_Max    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_MAX, 1); }
+
+RELEASE HVAC_Setpoint_Up     { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SP_UP, 0); }
+RELEASE HVAC_Setpoint_Down   { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SP_DOWN, 0); }
+RELEASE HVAC_SystemMode_Off  { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_OFF, 0); }
+RELEASE HVAC_SystemMode_Cool { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_COOL, 0); }
+RELEASE HVAC_SystemMode_Heat { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_HEAT, 0); }
+RELEASE HVAC_SystemMode_Auto { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_AUTO, 0); }
+RELEASE HVAC_FanMode_On      { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FM_ON, 0); }
+RELEASE HVAC_FanMode_Auto    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FM_AUTO, 0); }
+RELEASE HVAC_FanSpeed_Low    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_LOW, 0); }
+RELEASE HVAC_FanSpeed_Medium { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_MED, 0); }
+RELEASE HVAC_FanSpeed_High   { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_HI, 0); }
+RELEASE HVAC_FanSpeed_Max    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_MAX, 0); }
+
+
+
+//=====// MAIN //=====//
+
+FUNCTION Main() {
+
+	WAITFORINITIALIZATIONCOMPLETE();
+
+	// Confirm this module version is supported by current FrameWork Interface Class version
+	IF(int.version != TARGET_SSHARP_VERSION) {
+    	PRINT("[ERROR] Version mismatch for Interface %u; Target Version: %s, Current Version: %s\r", InterfaceID, TARGET_SSHARP_VERSION, int.version);
+		RETURN;
+	}
+
+	int.id                         = InterfaceID;
+	int.name                       = InterfaceName;
+	int.defaultZoneID              = DefaultZoneID;
+	int.sourceListDisplaySize      = SOURCELISTVISIBLE;
+	int.sourceListMaxSize          = SOURCELISTSIZE;
+	int.lightingLoadsDisplaySize   = LIGHTLOADLISTSIZE;
+	int.lightingPresetsDisplaySize = LIGHTPRESETLISTSIZE;
+	int.shadeListDisplaySize       = SHADELISTSIZE;
+	int.hvacListDisplaySize        = HVACLISTSIZE;
+	int.invertSourceLists          = InvertSourceLists;
+
+	REGISTERDELEGATE(int, UpdateDigitalOutput, UpdateDigitalOutputHandler);
+	REGISTERDELEGATE(int, UpdateAnalogOutput, UpdateAnalogOutputHandler);
+	REGISTERDELEGATE(int, UpdateStringOutput, UpdateStringOutputHandler);
+		
+	REGISTERDELEGATE(int, ZoneListUpdate, ZoneListUpdateHandler);
+	REGISTERDELEGATE(int, AvailableZoneRequest, AvailableZoneRequestHandler);
+	REGISTERDELEGATE(int, SourceListUpdate, SourceListUpdateHandler);
+	REGISTERDELEGATE(int, SysMenuListUpdate, SysMenuListUpdateHandler);
+	REGISTERDELEGATE(int, ShareListRequest, ShareListRequestHandler);
+	REGISTERDELEGATE(int, TriggerSendShareListItem, TriggerSendShareListItemHandler);
+	REGISTERDELEGATE(int, TriggerSendShareMuteState, TriggerSendShareMuteStateHandler);
+	REGISTERDELEGATE(int, TriggerSendShareVolume, TriggerSendShareVolumeHandler);
+	REGISTERDELEGATE(int, TriggerSendShareState, TriggerSendShareStateHandler);
+	REGISTERDELEGATE(int, TriggerSendDisplayControlListItem, TriggerSendDisplayControlListItemHandler);
+	REGISTERDELEGATE(int, TriggerSendLiftFb, TriggerSendLiftFbHandler);
+
+	REGISTERDELEGATE(int, LightingLoadListUpdate, LightingLoadListUpdateHandler);
+	REGISTERDELEGATE(int, LightingPresetListUpdate, LightingPresetListUpdateHandler);
+	REGISTERDELEGATE(int, LightingLoadFbUpdate, LightingLoadFbUpdateHandler);
+	REGISTERDELEGATE(int, LightingPresetFbUpdate, LightingPresetFbUpdateHandler);
+        
+	REGISTERDELEGATE(int, ShadeListUpdate, ShadeListUpdateHandler);
+	REGISTERDELEGATE(int, ShadeFbUpdate, ShadeFbUpdateHandler);
+
+	REGISTERDELEGATE(int, HVACListUpdate, HVACListUpdateHandler);
+	REGISTERDELEGATE(int, HVACFbUpdate, HVACFbUpdateHandler);
+
+	IF(Core.RegisterInterface(InterfaceID, int) > 0) { 	
+    	// Success!
+	} ELSE
+		PRINT("Error registering Interface %u\r", InterfaceID);
+
+}

@@ -1,0 +1,199 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+*/
+
+#SYMBOL_NAME "FrameWork Display Link 1.2"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#PRINT_TO_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+#DEFINE_CONSTANT TRUE 1
+#DEFINE_CONSTANT FALSE 0
+
+//=====// I/O //=====//
+
+DIGITAL_OUTPUT _SKIP_,
+			   _SKIP_,
+			   Power_On, 
+			   Power_Off, 
+			   Power_Toggle,
+			   _SKIP_,
+			   Menu_Up,
+			   Menu_Down,
+			   Menu_Left,
+			   Menu_Right,
+			   Menu_Select,
+			   Menu,
+			   Exit,
+			   _SKIP_,
+			   Volume_Up,
+			   Volume_Down,
+			   Volume_Mute,
+			   _SKIP_,
+			   Input_HDMI1,
+			   _SKIP_,
+			   Input_HDMI2,
+			   _SKIP_,
+			   Input_HDMI3,
+			   _SKIP_,
+			   Input_HDMI4,
+			   _SKIP_,
+			   Input_Component,
+			   _SKIP_,
+			   Input_Composite,
+			   _SKIP_,
+			   Input_TV,
+			   _SKIP_,
+			   Input_PC,
+			   _SKIP_,
+			   Misc[10,10];
+
+INTEGER_PARAMETER ZoneID,
+				  PowerOnDelay; 
+STRING_PARAMETER _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 _SKIP_,
+				 SourcesHDMI1[96],
+				 _SKIP_,
+				 SourcesHDMI2[96],
+				 _SKIP_,
+				 SourcesHDMI3[96],
+				 _SKIP_,
+				 SourcesHDMI4[96],
+				 _SKIP_,
+				 SourcesComponent[96],
+				 _SKIP_,
+				 SourcesComposite[96],
+				 _SKIP_,
+				 SourcesTV[96],
+				 _SKIP_,
+				 SourcesPC[96],
+				 MiscLabel[10,10][12];
+
+//=====// VARIABLES //=====//
+
+Display Dsp;
+
+//=====// FUNCTIONS //=====//
+
+CALLBACK FUNCTION DisplayCommandHandler(INTEGER _cmd, INTEGER _state) {
+	IF(_cmd <= 21) {
+		SWITCH(_cmd) {
+	    	CASE(1): { Power_On = _state; }
+			CASE(2): { Power_Off = _state; }
+			CASE(3): { Power_Toggle = _state; }
+			CASE(4): { Menu_Up = _state; }
+			CASE(5): { Menu_Down = _state; }
+			CASE(6): { Menu_Left = _state; }
+			CASE(7): { Menu_Right = _state; }
+			CASE(8): { Menu_Select = _state; }
+			CASE(9): { Menu = _state; }
+			CASE(10): { Exit = _state; }
+			CASE(11): { Volume_Up = _state; }
+			CASE(12): { Volume_Down = _state; }
+			CASE(13): { Volume_Mute = _state; }
+			CASE(14): { Input_HDMI1 = _state; }
+			CASE(15): { Input_HDMI2 = _state; }
+			CASE(16): { Input_HDMI3 = _state; }
+			CASE(17): { Input_HDMI4 = _state; }
+			CASE(18): { Input_Component = _state; }
+			CASE(19): { Input_Composite = _state; }
+			CASE(20): { Input_TV = _state; }
+			CASE(21): { Input_PC = _state; }
+		}
+	} ELSE {
+		Misc[_cmd-21] = _state;
+	}
+}
+
+CALLBACK FUNCTION DisplayCommandPulseHandler(INTEGER _cmd) {
+	IF(_cmd <= 21) {
+		SWITCH(_cmd) {
+	    	CASE(1): { PULSE(20, Power_On); }
+			CASE(2): { PULSE(20, Power_Off); }
+			CASE(3): { PULSE(20, Power_Toggle); }
+			CASE(4): { PULSE(20, Menu_Up); }
+			CASE(5): { PULSE(20, Menu_Down); }
+			CASE(6): { PULSE(20, Menu_Left); }
+			CASE(7): { PULSE(20, Menu_Right); }
+			CASE(8): { PULSE(20, Menu_Select); }
+			CASE(9): { PULSE(20, Menu); }
+			CASE(10): { PULSE(20, Exit); }
+			CASE(11): { PULSE(20, Volume_Up); }
+			CASE(12): { PULSE(20, Volume_Down); }
+			CASE(13): { PULSE(20, Volume_Mute); }
+			CASE(14): { PULSE(20, Input_HDMI1); }
+			CASE(15): { PULSE(20, Input_HDMI2); }
+			CASE(16): { PULSE(20, Input_HDMI3); }
+			CASE(17): { PULSE(20, Input_HDMI4); }
+			CASE(18): { PULSE(20, Input_Component); }
+			CASE(19): { PULSE(20, Input_Composite); }
+			CASE(20): { PULSE(20, Input_TV); }
+			CASE(21): { PULSE(20, Input_PC); }
+		}
+	} ELSE {
+		PULSE(20, Misc[_cmd - 21]);
+	}
+}
+
+//=====// EVENTS //=====//
+
+//=====// MAIN //=====//
+FUNCTION Main() {
+
+	INTEGER i;
+
+	WAITFORINITIALIZATIONCOMPLETE ();
+	
+	Dsp.zoneID = ZoneID;
+	Dsp.SetPowerOnDelayTime(PowerOnDelay);
+
+	// Parse Input Source lists into S# Dictionary
+	IF(SourcesHDMI1 <> "")
+		Dsp.ParseInputSources(SourcesHDMI1, 14);
+	IF(SourcesHDMI2 <> "")
+		Dsp.ParseInputSources(SourcesHDMI2, 15);
+	IF(SourcesHDMI3 <> "")
+    	Dsp.ParseInputSources(SourcesHDMI3, 16);
+	IF(SourcesHDMI4 <> "")
+		Dsp.ParseInputSources(SourcesHDMI4, 17);
+	IF(SourcesComponent <> "")
+		Dsp.ParseInputSources(SourcesComponent, 18);
+	IF(SourcesComposite <> "")
+		Dsp.ParseInputSources(SourcesComposite, 19);
+	IF(SourcesTV <> "")
+		Dsp.ParseInputSources(SourcesTV, 20);
+	IF(SourcesPC <> "")
+		Dsp.ParseInputSources(SourcesPC, 21);
+
+	IF(Core.RegisterDisplay(ZoneID, Dsp) > 0) {
+		REGISTERDELEGATE(Dsp, DisplayCommand, DisplayCommandHandler);
+		REGISTERDELEGATE(Dsp, DisplayCommandPulse, DisplayCommandPulseHandler);
+        
+		// Loop through Misc buttons and send to S#
+		FOR(i = 1 TO 10) {
+        	IF(MiscLabel[i] <> "") {
+            	Dsp.AddButton(MiscLabel[i]);
+			}
+		}
+	} ELSE
+		PRINT("Error registering display with Zone %u\r", ZoneID);
+}
+

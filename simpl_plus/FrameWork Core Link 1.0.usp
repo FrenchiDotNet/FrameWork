@@ -1,0 +1,45 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+*/
+
+#SYMBOL_NAME "FrameWork Core Link 1.0"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#PRINT_TO_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+//=====// I/O //=====//
+
+DIGITAL_OUTPUT Initialization_Complete;
+
+INTEGER_PARAMETER _SKIP_,
+				  SysInfo_Server_Port;
+
+#BEGIN_PARAMETER_PROPERTIES SysInfo_Server_Port
+	PROPDEFAULTVALUE = 5132d;
+#END_PARAMETER_PROPERTIES
+
+//=====// VARIABLES //=====//
+
+//=====// FUNCTIONS //=====//
+
+CALLBACK FUNCTION startupCompleteEventHandler (INTEGER _eventID) {
+	Initialization_Complete = 1;
+}
+
+//=====// EVENTS //=====//
+
+//=====// MAIN //=====//
+
+FUNCTION Main () {
+
+	WAITFORINITIALIZATIONCOMPLETE();
+
+	REGISTERDELEGATE (Core, startupCompleteEvent, startupCompleteEventHandler);
+
+	Core.ConfigureSysInfoServer (SysInfo_Server_Port);
+
+}
+

@@ -1,0 +1,139 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+Revision: 1.2
+
+--- CHANGELOG ----
+
+1.2 - Initial release
+
+*/
+
+#SYMBOL_NAME "FrameWork Light Link 1.2"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+#DEFINE_CONSTANT CMD_FULLOFF 1
+#DEFINE_CONSTANT CMD_FULLON 2
+#DEFINE_CONSTANT CMD_DIMUP 3
+#DEFINE_CONSTANT CMD_DIMDOWN 4
+#DEFINE_CONSTANT CMD_TOGGLE 6
+
+//=====// I/O //=====//
+
+DIGITAL_INPUT _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  On_Fb;
+
+ANALOG_INPUT _SKIP_,
+			 Level_In;
+
+DIGITAL_OUTPUT _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   FullOn,
+			   FullOff,
+			   Toggle,
+			   _SKIP_,
+			   DimUp,
+			   DimDown;	
+
+STRING_PARAMETER  Light_Name[64];
+INTEGER_PARAMETER LightID,
+				  Control_Type,
+				  HasFeedback;	   
+			   
+
+//=====// VARIABLES //=====//
+
+Light Lite;
+
+//=====// FUNCTIONS //=====//
+
+CALLBACK FUNCTION TriggerSendCommandHandler (INTEGER _cmd, INTEGER _state) {
+
+	SWITCH (_cmd) {
+    
+		CASE(CMD_FULLOFF): {
+			IF(_state = 1)
+				FullOff = 1;
+			IF(_state = 0)
+				FullOff = 0;
+			IF(_state = 3)
+				PULSE(5,FullOff);
+		}
+		CASE(CMD_FULLON): {
+			IF(_state = 1)
+				FullOn = 1;
+			IF(_state = 0)
+				FullOn = 0;
+			IF(_state = 3)
+				PULSE(5,FullOn);
+		}
+		CASE(CMD_DIMUP): {
+			IF(_state = 1)
+				DimUp = 1;
+			IF(_state = 0)
+				DimUp = 0;
+			IF(_state = 3)
+				PULSE(5,DimUp);
+		}
+		CASE(CMD_DIMDOWN): {
+			IF(_state = 1)
+				DimDown = 1;
+			IF(_state = 0)
+				DimDown = 0;
+			IF(_state = 3)
+				PULSE(5,DimDown);
+		}
+		CASE(CMD_TOGGLE): {
+			IF(_state = 1)
+				Toggle = 1;
+			IF(_state = 0)
+				Toggle = 0;
+			IF(_state = 3)
+				PULSE(5,Toggle);
+
+		}
+
+	}
+
+}
+
+CALLBACK FUNCTION TriggerSendLevelHandler (INTEGER _level) {
+
+}
+
+//=====// EVENTS //=====//
+
+CHANGE Level_In {
+	Lite.setLevelFeedback(Level_In);
+}
+
+PUSH On_Fb {
+	Lite.setIsOnFeedback(1);
+}
+
+RELEASE On_Fb {
+	Lite.setIsOnFeedback(0);
+}
+
+//=====// MAIN //=====//
+
+FUNCTION Main() {
+
+	WAITFORINITIALIZATIONCOMPLETE ();
+
+	Lite.createLight(LightID, Light_Name, Control_Type, HasFeedback);
+
+	REGISTERDELEGATE(Lite, TriggerSendCommand, TriggerSendCommandHandler);
+	REGISTERDELEGATE(Lite, TriggerSendLevel,   TriggerSendLevelHandler);
+
+    Core.RegisterLight(Lite);
+
+}

@@ -1,0 +1,99 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+*/
+
+#SYMBOL_NAME "FrameWork Lift Link 1.0"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#PRINT_TO_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+#DEFINE_CONSTANT TRUE 1
+#DEFINE_CONSTANT FALSE 0
+
+#DEFINE_CONSTANT CMDRELAYUP 1
+#DEFINE_CONSTANT CMDRELAYDOWN 2
+#DEFINE_CONSTANT CMDSINGLERELAY 3
+#DEFINE_CONSTANT HOLDFB 10
+
+//=====// I/O //=====//
+
+DIGITAL_OUTPUT SingleRelay,
+			   _SKIP_,
+			   RelayUp,
+			   RelayDown,
+			   _SKIP_,
+			   HoldEnabled;
+
+INTEGER_PARAMETER _SKIP_,
+				  _SKIP_,
+				  _SKIP_,
+				  _SKIP_,
+				  _SKIP_,
+				  _SKIP_,
+				  ZoneID,
+				  TypeOfLift;
+
+#BEGIN_PARAMETER_PROPERTIES TypeOfLift
+	PROPDEFAULTVALUE = 1d;
+	PROPLIST = {1d, "SingleRelay"},{2d, "DualRelayPulse"},{3d, "DualRelaySustain"};
+#END_PARAMETER_PROPERTIES
+
+//=====// VARIABLES //=====//
+
+Lift liftOb;
+
+//=====// FUNCTIONS //=====//
+
+CALLBACK FUNCTION LiftCommandHandler(INTEGER _cmd, INTEGER _state) {
+	SWITCH(_cmd) {
+    	CASE(CMDRELAYUP): {
+        	RelayUp = _state;
+		}
+		CASE(CMDRELAYDOWN): {
+        	RelayDown = _state;
+		}
+		CASE(CMDSINGLERELAY): {
+        	SingleRelay = _state;
+		}
+		CASE(HOLDFB): {
+        	HoldEnabled = _state;
+		}
+	}
+}
+
+CALLBACK FUNCTION LiftCommandPulseHandler(INTEGER _cmd) {
+	SWITCH(_cmd) {
+    	CASE(CMDRELAYUP): {
+        	PULSE(50, RelayUp);
+		}
+		CASE(CMDRELAYDOWN): {
+            PULSE(50, RelayDown);
+		}
+		CASE(CMDSINGLERELAY): {
+            PULSE(50, SingleRelay);
+		}
+	}
+}
+
+//=====// EVENTS //=====//
+
+//=====// MAIN //=====//
+FUNCTION Main() {
+
+	WAITFORINITIALIZATIONCOMPLETE ();
+
+	liftOb.zoneID = ZoneID;
+	liftOb.SetType(TypeOfLift);
+
+	REGISTERDELEGATE(liftOb, LiftCommand, LiftCommandHandler);
+    REGISTERDELEGATE(liftOb, LiftCommandPulse, LiftCommandPulseHandler);
+    
+	IF(Core.RegisterLift(ZoneID, liftOb) > 0) {
+		// Success!
+	}
+
+}
+

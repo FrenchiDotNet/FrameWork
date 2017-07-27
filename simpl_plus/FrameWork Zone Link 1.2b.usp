@@ -1,0 +1,211 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+
+CHANGELOG:
+
+1.2 - 7/11/17 - Added Lights parameter, SIMPL# integration.
+
+*/
+
+#SYMBOL_NAME "FrameWork Zone Link 1.2b"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+#DEFINE_CONSTANT TRUE 1
+#DEFINE_CONSTANT FALSE 0
+
+#DEFINE_CONSTANT DJ_HWVOLUMEUP 11
+#DEFINE_CONSTANT DJ_HWVOLUMEDN 12
+
+//=====// I/O //=====//
+
+DIGITAL_INPUT _SKIP_, 
+			  _SKIP_, 
+			  _SKIP_, 
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_, 
+			  _SKIP_,
+			  MuteOn, 
+			  MuteOff, 
+			  MuteToggle, 
+			  AudioDevice_MuteFb;
+
+ANALOG_INPUT Set_Source, 
+			 AudioDevice_VolumeFb;
+
+DIGITAL_OUTPUT _SKIP_, 
+			   _SKIP_, 
+			   _SKIP_, 
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_, 
+			   _SKIP_,
+			   Mute_Fb, 
+			   Display_Available, 
+			   AudioDevice_VolumeUp, 
+			   AudioDevice_VolumeDown, 
+			   AudioDevice_MuteOn, 
+			   AudioDevice_MuteOff, 
+			   AudioDevice_MuteToggle;
+
+ANALOG_OUTPUT CurrentSource_ID, 
+			  VolumeLevel, 
+			  AudioDevice_VolumeDirect;
+
+STRING_OUTPUT CurrentSource_Name;
+
+STRING_PARAMETER  ZoneName[32], 
+				  AudioSources[72], 
+				  VideoSources[72],
+				  LightingLoads[256],
+				  LightingPresets[256],
+				  Shades[256],
+				  HVAC_Zones[256];
+
+INTEGER_PARAMETER RoomID;
+
+//=====// VARIABLES //=====//
+
+Zone Zn;
+
+//=====// FUNCTIONS //=====//
+
+CALLBACK FUNCTION UpdateCurrentSourceNameHandler(STRING _srcName) {
+	CurrentSource_Name = _srcName;
+}
+
+CALLBACK FUNCTION UpdateCurrentSourceIDHandler(INTEGER _sid) {
+	CurrentSource_ID = _sid;
+}
+
+CALLBACK FUNCTION UpdateCurrentVolumeHandler(INTEGER _level) {
+	VolumeLevel = _level;
+}
+
+CALLBACK FUNCTION UpdateMuteStateHandler(INTEGER _state) {
+	Mute_Fb = _state;
+}
+
+CALLBACK FUNCTION UpdateHWMuteStateHandler(INTEGER _state) {
+	IF(_state = FALSE) {
+    	AudioDevice_MuteOn = FALSE;
+		AudioDevice_MuteOff = TRUE;
+	} ELSE
+	IF(_state = TRUE) {
+		AudioDevice_MuteOff = FALSE;
+		AudioDevice_MuteOn = TRUE;
+	}
+}
+
+CALLBACK FUNCTION UpdateHWVolumeDirectHandler(INTEGER _level) {
+	AudioDevice_VolumeDirect = _level;	
+}
+
+CALLBACK FUNCTION UpdateDisplayAvailableHandler(INTEGER _state) {
+	Display_Available = _state;
+}
+
+CALLBACK FUNCTION SendZoneCommandHandler(INTEGER _join, INTEGER _state) {
+	SWITCH(_join) {
+    	CASE(DJ_HWVOLUMEUP): {
+        	AudioDevice_VolumeUp = _state;
+		}
+		CASE(DJ_HWVOLUMEDN): {
+        	AudioDevice_VolumeDown = _state;
+		}
+	}
+}
+
+CALLBACK SIMPLSHARPSTRING_FUNCTION AudioSourcesRequestHandler() {
+	RETURN(AudioSources);
+}
+
+CALLBACK SIMPLSHARPSTRING_FUNCTION VideoSourcesRequestHandler() {
+    RETURN(VideoSources);
+}
+
+CALLBACK SIMPLSHARPSTRING_FUNCTION LightsLoadRequestHandler() {
+	RETURN(LightingLoads);
+}
+
+CALLBACK SIMPLSHARPSTRING_FUNCTION LightsPresetRequestHandler() {
+	RETURN(LightingPresets);
+}
+
+CALLBACK SIMPLSHARPSTRING_FUNCTION ShadesRequestHandler() {
+	RETURN(Shades);
+}
+
+CALLBACK SIMPLSHARPSTRING_FUNCTION HVACRequestHandler() {
+	RETURN(HVAC_Zones);
+}
+
+
+
+//=====// EVENTS //=====//
+
+PUSH MuteOn {
+	Zn.SetMuteState(TRUE);
+}
+
+PUSH MuteOff {
+    Zn.SetMuteState(FALSE);
+}
+
+PUSH MuteToggle {
+    Zn.ToggleMuteState();
+}
+
+PUSH AudioDevice_MuteFb {
+	Zn.SetMuteFb(TRUE);
+}
+
+RELEASE AudioDevice_MuteFb {
+    Zn.SetMuteFb(FALSE);
+}
+
+CHANGE Set_Source {
+	Zn.SetCurrentSource(Set_Source);
+}
+
+CHANGE AudioDevice_VolumeFb {
+	Zn.SetVolumeFb(AudioDevice_VolumeFb);
+}
+
+//=====// MAIN //=====//
+
+FUNCTION Main() {
+
+	WAITFORINITIALIZATIONCOMPLETE();
+
+	Zn.CreateZone(RoomID, ZoneName);
+
+	REGISTERDELEGATE(Zn, UpdateCurrentSourceName, UpdateCurrentSourceNameHandler);
+    REGISTERDELEGATE(Zn, UpdateCurrentSourceID, UpdateCurrentSourceIDHandler);
+	REGISTERDELEGATE(Zn, UpdateCurrentVolume, UpdateCurrentVolumeHandler);
+	REGISTERDELEGATE(Zn, UpdateMuteState, UpdateMuteStateHandler);
+	REGISTERDELEGATE(Zn, UpdateHWMuteState, UpdateHWMuteStateHandler);
+	REGISTERDELEGATE(Zn, UpdateHWVolumeDirect, UpdateHWVolumeDirectHandler);
+	REGISTERDELEGATE(Zn, UpdateDisplayAvailable, UpdateDisplayAvailableHandler);
+	REGISTERDELEGATE(Zn, SendZoneCommand, SendZoneCommandHandler);
+
+	REGISTERDELEGATE(Zn, AudioSourcesRequest, AudioSourcesRequestHandler);
+	REGISTERDELEGATE(Zn, VideoSourcesRequest, VideoSourcesRequestHandler);
+
+	REGISTERDELEGATE(Zn, LightsLoadRequest, LightsLoadRequestHandler);
+	REGISTERDELEGATE(Zn, LightsPresetRequest, LightsPresetRequestHandler);
+
+	REGISTERDELEGATE(Zn, ShadesRequest, ShadesRequestHandler);
+
+	REGISTERDELEGATE(Zn, HVACRequest, HVACRequestHandler);
+
+
+	IF(Core.RegisterZone(Zn) > 0) {
+		// Success!
+	}
+
+}
