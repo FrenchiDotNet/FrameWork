@@ -15,7 +15,7 @@ namespace FrameWork {
 
         //===================// Members //===================//
 
-        internal static Dictionary<ushort, Zone>   Zones;
+        internal static Dictionary<ushort, Zone> Zones;
         internal static Dictionary<ushort, Source> Sources;
         internal static Dictionary<ushort, Display> Displays;
         internal static Dictionary<ushort, Interface> Interfaces;
@@ -61,6 +61,7 @@ namespace FrameWork {
          *              This method then calls individual Initialize functions on registered subclasses.
          */
         internal static void initializeSystem() {
+
             // Link Sources to Zones
             // {{-- TODO: Move this into a Zone.Initialize function --}}
             foreach (KeyValuePair<ushort, Zone> zn in Zones) {
@@ -114,6 +115,7 @@ namespace FrameWork {
                 ConsoleMessage(String.Format("[ERROR] Core.StartupCompleteEvent delegate is Null, skipping."));
 
             ConsoleMessage(String.Format("[STARTUP] ... FrameWork Initialization Complete."));
+
         }
 
         /**
