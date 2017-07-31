@@ -27,10 +27,6 @@ namespace FrameWork {
         public ushort id;
         public ushort defaultZoneID;
 
-        internal ushort primaryDisplayState;
-        internal ushort secondartDisplayState;
-        internal ushort activePopup;
-
         internal List<Zone> zoneList;
         internal List<Zone> shareZones;
         internal List<shareListEvents> shareList;
@@ -143,9 +139,6 @@ namespace FrameWork {
             name                  = "";
             id                    = 0;
             defaultZoneID         = 0;
-            primaryDisplayState   = 0;
-            secondartDisplayState = 0;
-            activePopup           = 0;
 
             zoneList           = new List<Zone>();
             shareZones         = new List<Zone>();
