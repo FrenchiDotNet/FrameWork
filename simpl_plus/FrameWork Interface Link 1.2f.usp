@@ -3,14 +3,14 @@ Dealer Name: Ask The Advisors
 Programmer: Ryan French
 */
 
-#SYMBOL_NAME "FrameWork Interface Link 1.2e"
+#SYMBOL_NAME "FrameWork Interface Link 1.2f"
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
 #ENABLE_TRACE
 #PRINT_TO_TRACE
 #USER_SIMPLSHARP_LIBRARY "FrameWork"
 
-#DEFINE_CONSTANT TARGET_SSHARP_VERSION "1.2e" 
+#DEFINE_CONSTANT TARGET_SSHARP_VERSION "1.2f" 
 
 #DEFINE_CONSTANT TRUE 1
 #DEFINE_CONSTANT FALSE 0
@@ -23,15 +23,16 @@ Programmer: Ryan French
 #DEFINE_CONSTANT SHADELISTSIZE       12
 #DEFINE_CONSTANT HVACLISTSIZE         4
 
-#DEFINE_CONSTANT DJ_POPUPDISPLAYCMD        7
-#DEFINE_CONSTANT DJ_POPUPLIFTCMD           8
-#DEFINE_CONSTANT DJ_POPUPAVRCMD            9
-#DEFINE_CONSTANT DJ_MUTEFB                16
-#DEFINE_CONSTANT DJ_ENTERSETUP            21
-#DEFINE_CONSTANT DJ_SHARELISTAVAILABLE    31
-#DEFINE_CONSTANT DJ_LIGHTINGLISTAVAILABLE 32
-#DEFINE_CONSTANT DJ_SHADELISTAVAILABLE    33
-#DEFINE_CONSTANT DJ_HVACLISTAVAILABLE     34
+#DEFINE_CONSTANT DJ_POPUPDISPLAYCMD          7
+#DEFINE_CONSTANT DJ_POPUPLIFTCMD             8
+#DEFINE_CONSTANT DJ_POPUPAVRCMD              9
+#DEFINE_CONSTANT DJ_MUTEFB                  16
+#DEFINE_CONSTANT DJ_ENTERSETUP              21
+#DEFINE_CONSTANT DJ_SHARELISTAVAILABLE      31
+#DEFINE_CONSTANT DJ_LIGHTINGLISTAVAILABLE   32
+#DEFINE_CONSTANT DJ_SHADELISTAVAILABLE      33
+#DEFINE_CONSTANT DJ_HVACLISTAVAILABLE       34
+#DEFINE_CONSTANT DJ_SECURITYKAVAILABLE      35
 
 #DEFINE_CONSTANT AJ_CURRENTZONE       1
 #DEFINE_CONSTANT AJ_CURRENTSOURCE     2
@@ -46,6 +47,7 @@ Programmer: Ryan French
 #DEFINE_CONSTANT AJ_LIGHTPRESETCOUNT 33
 #DEFINE_CONSTANT AJ_SHADECOUNT       35
 #DEFINE_CONSTANT AJ_HVACCOUNT        36
+#DEFINE_CONSTANT AJ_SECURITYKPCOUNT  37
 
 #DEFINE_CONSTANT SJ_CURRENTZONENAME   1
 #DEFINE_CONSTANT SJ_CURRENTSOURCENAME 2
@@ -120,6 +122,64 @@ Programmer: Ryan French
 #DEFINE_CONSTANT HTYPE_HEATCOOL     2
 #DEFINE_CONSTANT HTYPE_HEATCOOLAUTO 3
 
+#DEFINE_CONSTANT SKP_KEYPAD_0         1
+#DEFINE_CONSTANT SKP_KEYPAD_1         2
+#DEFINE_CONSTANT SKP_KEYPAD_2         3
+#DEFINE_CONSTANT SKP_KEYPAD_3         4
+#DEFINE_CONSTANT SKP_KEYPAD_4         5
+#DEFINE_CONSTANT SKP_KEYPAD_5         6
+#DEFINE_CONSTANT SKP_KEYPAD_6         7
+#DEFINE_CONSTANT SKP_KEYPAD_7         8
+#DEFINE_CONSTANT SKP_KEYPAD_8         9
+#DEFINE_CONSTANT SKP_KEYPAD_9        10
+#DEFINE_CONSTANT SKP_KEYPAD_ENT      11
+#DEFINE_CONSTANT SKP_KEYPAD_CLR      12
+#DEFINE_CONSTANT SKP_KEYPAD_DEL      13
+#DEFINE_CONSTANT SKP_KEYPAD_STAR     14
+#DEFINE_CONSTANT SKP_KEYPAD_POUND    15
+#DEFINE_CONSTANT SKP_KEYPAD_EXIT     16
+#DEFINE_CONSTANT SKP_KEYPAD_STAY     17
+#DEFINE_CONSTANT SKP_KEYPAD_CHIME    18
+#DEFINE_CONSTANT SKP_KEYPAD_BYPASS   19
+#DEFINE_CONSTANT SKP_DISARM          20
+#DEFINE_CONSTANT SKP_ARM_AWAY        21
+#DEFINE_CONSTANT SKP_ARM_HOME        22
+#DEFINE_CONSTANT SKP_ARM_NIGHT       23
+#DEFINE_CONSTANT SKP_FUNCTION_01     24
+#DEFINE_CONSTANT SKP_FUCNTION_02     25
+#DEFINE_CONSTANT SKP_FUNCTION_03     26
+#DEFINE_CONSTANT SKP_FUNCTION_04     27
+#DEFINE_CONSTANT SKP_CUSTOM_01       28
+#DEFINE_CONSTANT SKP_CUSTOM_02       29
+#DEFINE_CONSTANT SKP_CUSTOM_03       30
+#DEFINE_CONSTANT SKP_CUSTOM_04       31
+#DEFINE_CONSTANT SKP_CUSTOM_05       32
+#DEFINE_CONSTANT SKP_CUSTOM_06       33
+#DEFINE_CONSTANT SKP_DISARM_FB       34
+#DEFINE_CONSTANT SKP_ARM_AWAY_FB     35
+#DEFINE_CONSTANT SKP_ARM_HOME_FB     36
+#DEFINE_CONSTANT SKP_ARM_NIGHT_FB    37
+#DEFINE_CONSTANT SKP_CUSTOM_01_FB    38
+#DEFINE_CONSTANT SKP_CUSTOM_02_FB    39
+#DEFINE_CONSTANT SKP_CUSTOM_03_FB    40
+#DEFINE_CONSTANT SKP_CUSTOM_04_FB    41
+#DEFINE_CONSTANT SKP_CUSTOM_05_FB    42
+#DEFINE_CONSTANT SKP_CUSTOM_06_FB    43
+#DEFINE_CONSTANT SKP_TXT_STARS       44
+#DEFINE_CONSTANT SKP_TXT_STATUS      45
+#DEFINE_CONSTANT SKP_NUM_CUSTOMS     46
+#DEFINE_CONSTANT SKP_FUNC_ACTIVE     47
+#DEFINE_CONSTANT SKP_FUCNTION_TXT_01 48
+#DEFINE_CONSTANT SKP_FUCNTION_TXT_02 49
+#DEFINE_CONSTANT SKP_FUCNTION_TXT_03 50
+#DEFINE_CONSTANT SKP_FUCNTION_TXT_04 51
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_01   52
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_02   53
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_03   54
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_04   55
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_05   56
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_06   57
+
 //=====// I/O //=====//
 
 DIGITAL_INPUT _SKIP_,
@@ -128,11 +188,39 @@ DIGITAL_INPUT _SKIP_,
 			  _SKIP_, 
 			  _SKIP_,
 			  _SKIP_,
+			  _SKIP_,
 			  PowerOff_Zone,
 			  PowerOff_All,
 			  Zone_VolumeUp,
 			  Zone_VolumeDown,
 			  Zone_Mute,
+			  Security_Keypad_0,
+			  Security_Keypad_1,
+			  Security_Keypad_2,
+			  Security_Keypad_3,
+			  Security_Keypad_4,
+			  Security_Keypad_5,
+			  Security_Keypad_6,
+			  Security_Keypad_7,
+			  Security_Keypad_8,
+			  Security_Keypad_9,
+			  Security_Keypad_Enter,
+			  Security_Keypad_Clear,
+			  Security_Keypad_Backspace,
+			  Security_Disarm,
+			  Security_Arm_Away,
+			  Security_Arm_Home,
+			  Security_Arm_Night,
+			  Security_Function_01,
+			  Security_Function_02,
+			  Security_Function_03,
+			  Security_Function_04,
+			  Security_Custom_01,
+			  Security_Custom_02,
+			  Security_Custom_03,
+			  Security_Custom_04,
+			  Security_Custom_05,
+			  Security_Custom_06,
 			  ZoneList[ZONELISTSIZE],
 			  SourceList_Listen[SOURCELISTSIZE],
 			  SourceList_Watch[SOURCELISTSIZE],
@@ -173,16 +261,32 @@ DIGITAL_OUTPUT _SKIP_,
 			   _SKIP_, 
 			   _SKIP_,
 			   _SKIP_,
+			   _SKIP_,
 			   Show_ListenList_Button,
 			   Show_WatchList_Button,
 			   Show_ShareList_Button,
 			   Show_Shades_Button,
 			   Show_HVAC_Button,
+			   Show_Security_Button,
 			   Request_TVControl_Popup,
 			   Request_LiftControl_Popup,
 			   Request_AVRControl_Popup,
 			   Enter_Setup,
-			   Zone_Mute_Fb,        
+			   Zone_Mute_Fb,
+			   Security_Disarm_Fb,
+			   Security_Arm_Away_Fb,
+			   Security_Arm_Home_Fb,
+			   Security_Arm_Night_Fb,
+			   Security_Function_01_Enabled,
+			   Security_Function_02_Enabled,
+			   Security_Function_03_Enabled,
+               Security_Function_04_Enabled,
+			   Security_Custom_01_Fb,
+			   Security_Custom_02_Fb,
+			   Security_Custom_03_Fb,
+			   Security_Custom_04_Fb,
+			   Security_Custom_05_Fb,
+			   Security_Custom_06_Fb,        
 			   ZoneList_Fb[ZONELISTSIZE],
 			   SourceList_Listen_Fb[SOURCELISTSIZE],
 			   SourceList_Listen_Visible[SOURCELISTSIZE],
@@ -240,10 +344,14 @@ ANALOG_OUTPUT CurrentZone,
 			  LightingLoad_NumberOfItems,
 			  LightingPreset_NumberOfItems,
 			  ShadeList_NumberOfItems,
-			  HVACList_NumberOfItems;
+			  HVACList_NumberOfItems,
+			  SecurityList_NumberOfItems,
+			  Security_CustomButtonList_NumberOfItems;
 
 STRING_OUTPUT Current_Zone_Name,
-			  Current_Source_Name;
+			  Current_Source_Name,
+			  Security_Keypad_Stars,
+			  Security_Keypad_Status;
 
 ANALOG_OUTPUT ZoneList_Icons[ZONELISTSIZE],
 			  SourceList_Listen_Icons[SOURCELISTSIZE],
@@ -264,7 +372,9 @@ STRING_OUTPUT ZoneList_Label[ZONELISTSIZE],
 			  LightingLoad_Name[LIGHTLOADLISTSIZE],
 			  LightingPreset_Name[LIGHTPRESETLISTSIZE],
 			  Shade_Name[SHADELISTSIZE],
-			  HVAC_Name[HVACLISTSIZE];
+			  HVAC_Name[HVACLISTSIZE],
+			  Security_Function_Label[4],
+			  Security_Custom_Label[6];
 
 INTEGER_PARAMETER InterfaceID, 
 				  DefaultZoneID,
@@ -272,7 +382,8 @@ INTEGER_PARAMETER InterfaceID,
 
 STRING_PARAMETER  InterfaceName[24], 
 				  AvailableZones[192], 
-				  ShareZones[192];
+				  ShareZones[192],
+				  SecurityKeypads[24];
 
 #BEGIN_PARAMETER_PROPERTIES InvertSourceLists
 	PROPLIST = { 0d,"False" },{ 1d,"True" };
@@ -313,6 +424,9 @@ CALLBACK FUNCTION UpdateDigitalOutputHandler(INTEGER _join, INTEGER _state) {
 		}
 		CASE(DJ_HVACLISTAVAILABLE): {
         	Show_HVAC_Button = _state;
+		}
+		CASE(DJ_SECURITYKAVAILABLE): {
+        	Show_Security_Button = _state;
 		}
 		CASE(DJ_MUTEFB): {
             Zone_Mute_Fb = _state;
@@ -392,6 +506,9 @@ CALLBACK FUNCTION UpdateAnalogOutputHandler(INTEGER _join, INTEGER _val) {
 		}
 		CASE(AJ_HVACCOUNT): {
         	HVACList_NumberOfItems = _val;
+		}
+		CASE(AJ_SECURITYKPCOUNT): {
+        	SecurityList_NumberOfItems = _val;
 		}
 	}
 }
@@ -769,6 +886,99 @@ CALLBACK FUNCTION HVACFbUpdateHandler(INTEGER _position, INTEGER _action, INTEGE
 
 }
 
+CALLBACK FUNCTION SecurityKeypadFbUpdateHandler (INTEGER _action, INTEGER _state) {
+
+	SWITCH(_action) {
+     
+		CASE(SKP_DISARM_FB): {
+        	Security_Disarm_Fb = _state;
+		}
+		CASE(SKP_ARM_AWAY_FB): {
+            Security_Arm_Away_Fb = _state;
+		}
+		CASE(SKP_ARM_HOME_FB): {
+            Security_Arm_Home_Fb = _state;
+		}
+		CASE(SKP_ARM_NIGHT_FB): {
+            Security_Arm_Night_Fb = _state;
+		}
+		CASE(SKP_CUSTOM_01_FB): {
+            Security_Custom_01_Fb = _state;
+		}
+		CASE(SKP_CUSTOM_02_FB): {
+            Security_Custom_02_Fb = _state;
+		}
+		CASE(SKP_CUSTOM_03_FB): {
+            Security_Custom_03_Fb = _state;
+		}
+		CASE(SKP_CUSTOM_04_FB): {
+            Security_Custom_04_Fb = _state;
+		}
+        CASE(SKP_CUSTOM_05_FB): {
+            Security_Custom_05_Fb = _state;
+		}
+		CASE(SKP_CUSTOM_06_FB): {
+            Security_Custom_06_Fb = _state;
+		}
+		CASE(SKP_NUM_CUSTOMS): {
+            Security_CustomButtonList_NumberOfItems = _state;
+		}
+
+	}
+	
+}
+
+CALLBACK FUNCTION SecurityKeypadTextFbUpdateHandler (INTEGER _action, STRING _text) {
+
+	SWITCH(_action) {
+    
+		CASE(SKP_TXT_STARS): {
+        	Security_Keypad_Stars = _text;
+		}
+		CASE(SKP_TXT_STATUS): {
+            Security_Keypad_Status = _text;
+		}
+		CASE(SKP_FUNC_ACTIVE): {
+        	Security_Function_01_Enabled = ATOI(MID(_text, 1, 1));
+			Security_Function_02_Enabled = ATOI(MID(_text, 2, 1));
+			Security_Function_03_Enabled = ATOI(MID(_text, 3, 1));
+			Security_Function_04_Enabled = ATOI(MID(_text, 4, 1));
+		}
+		CASE(SKP_FUCNTION_TXT_01): {
+            Security_Function_Label[1] = _text;
+		}
+		CASE(SKP_FUCNTION_TXT_02): {
+            Security_Function_Label[2] = _text;
+		}
+		CASE(SKP_FUCNTION_TXT_03): {
+            Security_Function_Label[3] = _text;
+		}
+		CASE(SKP_FUCNTION_TXT_04): {
+            Security_Function_Label[4] = _text;
+		}
+		CASE(SKP_CUSTOM_TXT_01): {
+            Security_Custom_Label[1] = _text;
+		}
+		CASE(SKP_CUSTOM_TXT_02): {
+            Security_Custom_Label[2] = _text;
+		}
+		CASE(SKP_CUSTOM_TXT_03): {
+            Security_Custom_Label[3] = _text;
+		}
+		CASE(SKP_CUSTOM_TXT_04): {
+            Security_Custom_Label[4] = _text;
+		}
+		CASE(SKP_CUSTOM_TXT_05): {
+            Security_Custom_Label[5] = _text;
+		}
+		CASE(SKP_CUSTOM_TXT_06): {
+            Security_Custom_Label[6] = _text;
+		}
+
+	}
+
+}
+
  
 CALLBACK FUNCTION TriggerSendShareListItemHandler(INTEGER position, STRING zoneName, INTEGER shareActive, INTEGER muteState, INTEGER volume) {
 	ShareList_Label[position+1] = zoneName;
@@ -816,11 +1026,15 @@ CALLBACK FUNCTION TriggerSendLiftFbHandler(INTEGER output, INTEGER state) {
 }
 
 CALLBACK SIMPLSHARPSTRING_FUNCTION AvailableZoneRequestHandler() {
-	RETURN(AvailableZones);
+	RETURN (AvailableZones);
 }
 
 CALLBACK SIMPLSHARPSTRING_FUNCTION ShareListRequestHandler() {
-	RETURN(ShareZones);
+	RETURN (ShareZones);
+}
+
+CALLBACK SIMPLSHARPSTRING_FUNCTION SecurityKeypadListRequestHandler () {
+    RETURN (SecurityKeypads);
 }
 
 //=====// EVENTS //=====//
@@ -1037,7 +1251,33 @@ RELEASE HVAC_FanSpeed_Medium { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_M
 RELEASE HVAC_FanSpeed_High   { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_HI, 0); }
 RELEASE HVAC_FanSpeed_Max    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_MAX, 0); }
 
-
+CHANGE Security_Keypad_0         { int.SecurityKeypadEvent(SKP_KEYPAD_0, Security_Keypad_0); }
+CHANGE Security_Keypad_1         { int.SecurityKeypadEvent(SKP_KEYPAD_1, Security_Keypad_1); }
+CHANGE Security_Keypad_2         { int.SecurityKeypadEvent(SKP_KEYPAD_2, Security_Keypad_2); }
+CHANGE Security_Keypad_3         { int.SecurityKeypadEvent(SKP_KEYPAD_3, Security_Keypad_3); }
+CHANGE Security_Keypad_4         { int.SecurityKeypadEvent(SKP_KEYPAD_4, Security_Keypad_4); }
+CHANGE Security_Keypad_5         { int.SecurityKeypadEvent(SKP_KEYPAD_5, Security_Keypad_5); }
+CHANGE Security_Keypad_6         { int.SecurityKeypadEvent(SKP_KEYPAD_6, Security_Keypad_6); }
+CHANGE Security_Keypad_7         { int.SecurityKeypadEvent(SKP_KEYPAD_7, Security_Keypad_7); }
+CHANGE Security_Keypad_8         { int.SecurityKeypadEvent(SKP_KEYPAD_8, Security_Keypad_8); }
+CHANGE Security_Keypad_9         { int.SecurityKeypadEvent(SKP_KEYPAD_9, Security_Keypad_9); }
+CHANGE Security_Keypad_Enter     { int.SecurityKeypadEvent(SKP_KEYPAD_ENT, Security_Keypad_Enter); }
+CHANGE Security_Keypad_Clear     { int.SecurityKeypadEvent(SKP_KEYPAD_CLR, Security_Keypad_Clear); }
+CHANGE Security_Keypad_Backspace { int.SecurityKeypadEvent(SKP_KEYPAD_DEL, Security_Keypad_Backspace); }
+CHANGE Security_Disarm           { int.SecurityKeypadEvent(SKP_DISARM, Security_Disarm); }
+CHANGE Security_Arm_Away         { int.SecurityKeypadEvent(SKP_ARM_AWAY, Security_Arm_Away); }
+CHANGE Security_Arm_Home         { int.SecurityKeypadEvent(SKP_ARM_HOME, Security_Arm_Home); }
+CHANGE Security_Arm_Night        { int.SecurityKeypadEvent(SKP_ARM_NIGHT, Security_Arm_Night); }
+CHANGE Security_Function_01      { int.SecurityKeypadEvent(SKP_FUNCTION_01, Security_Function_01); }
+CHANGE Security_Function_02      { int.SecurityKeypadEvent(SKP_FUCNTION_02, Security_Function_02); }
+CHANGE Security_Function_03      { int.SecurityKeypadEvent(SKP_FUNCTION_03, Security_Function_03); }
+CHANGE Security_Function_04      { int.SecurityKeypadEvent(SKP_FUNCTION_04, Security_Function_04); }
+CHANGE Security_Custom_01        { int.SecurityKeypadEvent(SKP_CUSTOM_01, Security_Custom_01); }
+CHANGE Security_Custom_02        { int.SecurityKeypadEvent(SKP_CUSTOM_02, Security_Custom_02); }
+CHANGE Security_Custom_03        { int.SecurityKeypadEvent(SKP_CUSTOM_03, Security_Custom_03); }
+CHANGE Security_Custom_04        { int.SecurityKeypadEvent(SKP_CUSTOM_04, Security_Custom_04); }
+CHANGE Security_Custom_05        { int.SecurityKeypadEvent(SKP_CUSTOM_05, Security_Custom_05); }
+CHANGE Security_Custom_06        { int.SecurityKeypadEvent(SKP_CUSTOM_06, Security_Custom_06); }
 
 //=====// MAIN //=====//
 
@@ -1088,6 +1328,11 @@ FUNCTION Main() {
 
 	REGISTERDELEGATE(int, HVACListUpdate, HVACListUpdateHandler);
 	REGISTERDELEGATE(int, HVACFbUpdate, HVACFbUpdateHandler);
+
+	REGISTERDELEGATE(int, SecurityKeypadListRequest, SecurityKeypadListRequestHandler);
+	REGISTERDELEGATE(int, SecurityKeypadFbUpdate, SecurityKeypadFbUpdateHandler);
+	REGISTERDELEGATE(int, SecurityKeypadTextFbUpdate, SecurityKeypadTextFbUpdateHandler);
+    
 
 	IF(Core.RegisterInterface(InterfaceID, int) > 0) { 	
     	// Success!

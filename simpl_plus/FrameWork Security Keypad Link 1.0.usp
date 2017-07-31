@@ -1,0 +1,290 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+*/
+
+#SYMBOL_NAME "FrameWork Security Keypad Link 1.0"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#PRINT_TO_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+#DEFINE_CONSTANT SKP_KEYPAD_0         1
+#DEFINE_CONSTANT SKP_KEYPAD_1         2
+#DEFINE_CONSTANT SKP_KEYPAD_2         3
+#DEFINE_CONSTANT SKP_KEYPAD_3         4
+#DEFINE_CONSTANT SKP_KEYPAD_4         5
+#DEFINE_CONSTANT SKP_KEYPAD_5         6
+#DEFINE_CONSTANT SKP_KEYPAD_6         7
+#DEFINE_CONSTANT SKP_KEYPAD_7         8
+#DEFINE_CONSTANT SKP_KEYPAD_8         9
+#DEFINE_CONSTANT SKP_KEYPAD_9        10
+#DEFINE_CONSTANT SKP_KEYPAD_ENT      11
+#DEFINE_CONSTANT SKP_KEYPAD_CLR      12
+#DEFINE_CONSTANT SKP_KEYPAD_DEL      13
+#DEFINE_CONSTANT SKP_KEYPAD_STAR     14
+#DEFINE_CONSTANT SKP_KEYPAD_POUND    15
+#DEFINE_CONSTANT SKP_KEYPAD_EXIT     16
+#DEFINE_CONSTANT SKP_KEYPAD_STAY     17
+#DEFINE_CONSTANT SKP_KEYPAD_CHIME    18
+#DEFINE_CONSTANT SKP_KEYPAD_BYPASS   19
+#DEFINE_CONSTANT SKP_DISARM          20
+#DEFINE_CONSTANT SKP_ARM_AWAY        21
+#DEFINE_CONSTANT SKP_ARM_HOME        22
+#DEFINE_CONSTANT SKP_ARM_NIGHT       23
+#DEFINE_CONSTANT SKP_FUNCTION_01     24
+#DEFINE_CONSTANT SKP_FUCNTION_02     25
+#DEFINE_CONSTANT SKP_FUNCTION_03     26
+#DEFINE_CONSTANT SKP_FUNCTION_04     27
+#DEFINE_CONSTANT SKP_CUSTOM_01       28
+#DEFINE_CONSTANT SKP_CUSTOM_02       29
+#DEFINE_CONSTANT SKP_CUSTOM_03       30
+#DEFINE_CONSTANT SKP_CUSTOM_04       31
+#DEFINE_CONSTANT SKP_CUSTOM_05       32
+#DEFINE_CONSTANT SKP_CUSTOM_06       33
+#DEFINE_CONSTANT SKP_DISARM_FB       34
+#DEFINE_CONSTANT SKP_ARM_AWAY_FB     35
+#DEFINE_CONSTANT SKP_ARM_HOME_FB     36
+#DEFINE_CONSTANT SKP_ARM_NIGHT_FB    37
+#DEFINE_CONSTANT SKP_CUSTOM_01_FB    38
+#DEFINE_CONSTANT SKP_CUSTOM_02_FB    39
+#DEFINE_CONSTANT SKP_CUSTOM_03_FB    40
+#DEFINE_CONSTANT SKP_CUSTOM_04_FB    41
+#DEFINE_CONSTANT SKP_CUSTOM_05_FB    42
+#DEFINE_CONSTANT SKP_CUSTOM_06_FB    43
+#DEFINE_CONSTANT SKP_TXT_STARS       44
+#DEFINE_CONSTANT SKP_TXT_STATUS      45
+#DEFINE_CONSTANT SKP_NUM_CUSTOMS     46
+#DEFINE_CONSTANT SKP_FUNC_ACTIVE     47
+#DEFINE_CONSTANT SKP_FUCNTION_TXT_01 48
+#DEFINE_CONSTANT SKP_FUCNTION_TXT_02 49
+#DEFINE_CONSTANT SKP_FUCNTION_TXT_03 50
+#DEFINE_CONSTANT SKP_FUCNTION_TXT_04 51
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_01   52
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_02   53
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_03   54
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_04   55
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_05   56
+#DEFINE_CONSTANT SKP_CUSTOM_TXT_06   57
+
+
+//=====// I/O //=====//
+
+DIGITAL_INPUT _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  Disarm_Fb,
+			  Arm_Away_Fb,
+			  Arm_Home_Fb,
+			  Arm_Night_Fb,
+			  Custom_01_Fb,
+			  Custom_02_Fb,
+			  Custom_03_Fb,
+			  Custom_04_Fb,
+			  Custom_05_Fb,
+			  Custom_06_Fb;
+              
+STRING_INPUT Keypad_Stars[8],
+			 Status_Text[128];
+
+DIGITAL_OUTPUT _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   Keypad_0,
+			   Keypad_1,
+			   Keypad_2,
+			   Keypad_3,
+			   Keypad_4,
+			   Keypad_5,
+			   Keypad_6,
+			   Keypad_7,
+			   Keypad_8,
+			   Keypad_9,
+			   Keypad_Enter,
+			   Keypad_Clear,
+			   Keypad_Backspace,
+			   Disarm,
+			   Arm_Away,
+			   Arm_Home,
+			   Arm_Night,
+			   Function_01,
+			   Function_02,
+			   Function_03,
+			   Function_04,
+			   Custom_01,
+			   Custom_02,
+			   Custom_03,
+			   Custom_04,
+			   Custom_05,
+			   Custom_06;
+
+INTEGER_PARAMETER Security_ID;
+
+STRING_PARAMETER Keypad_Name[24],
+				 Function_01_Label[16],
+				 Function_02_Label[16],
+				 Function_03_Label[16],
+				 Function_04_Label[16],
+				 Custom_01_Label[16],
+				 Custom_02_Label[16],
+				 Custom_03_Label[16],
+				 Custom_04_Label[16],
+				 Custom_05_Label[16],
+				 Custom_06_Label[16];
+
+//=====// VARIABLES //=====//
+
+SecurityKeypad keyPad;
+
+//=====// FUNCTIONS //=====//
+
+CALLBACK FUNCTION TriggerSendCommandHandler (INTEGER _action, INTEGER _state) {
+
+	SWITCH (_action) {
+    
+		CASE(SKP_KEYPAD_0): {
+        	Keypad_0 = _state;
+		}
+		CASE(SKP_KEYPAD_1): {
+        	Keypad_1 = _state;
+		}
+		CASE(SKP_KEYPAD_2): {
+        	Keypad_2 = _state;
+		}
+		CASE(SKP_KEYPAD_3): {
+        	Keypad_3 = _state;
+		}
+		CASE(SKP_KEYPAD_4): {
+        	Keypad_4 = _state;
+		}
+		CASE(SKP_KEYPAD_5): {
+        	Keypad_5 = _state;
+		}
+		CASE(SKP_KEYPAD_6): {
+        	Keypad_6 = _state;
+		}
+		CASE(SKP_KEYPAD_7): {
+        	Keypad_7 = _state;
+		}
+		CASE(SKP_KEYPAD_8): {
+        	Keypad_8 = _state;
+		}
+		CASE(SKP_KEYPAD_9): {
+        	Keypad_9 = _state;
+		}
+        CASE(SKP_KEYPAD_ENT): {
+            Keypad_Enter = _state;
+		}
+        CASE(SKP_KEYPAD_CLR): {
+            Keypad_Clear = _state;
+		}
+        CASE(SKP_KEYPAD_DEL): {
+            Keypad_Backspace = _state;
+		}
+        CASE(SKP_DISARM): {
+            Disarm = _state;
+		}
+        CASE(SKP_ARM_AWAY): {
+            Arm_Away = _state;
+		}
+        CASE(SKP_ARM_HOME): {
+            Arm_Home = _state;
+		}
+        CASE(SKP_ARM_NIGHT): {
+            Arm_Night = _state;
+		}
+        CASE(SKP_FUNCTION_01): {
+            Function_01 = _state;
+		}
+        CASE(SKP_FUCNTION_02): {
+            Function_02 = _state;
+		}
+        CASE(SKP_FUNCTION_03): {
+            Function_03 = _state;
+		}
+        CASE(SKP_FUNCTION_04): {
+            Function_04 = _state;
+		}
+        CASE(SKP_CUSTOM_01): {
+            Custom_01 = _state;
+		}
+        CASE(SKP_CUSTOM_02): {
+            Custom_02 = _state;
+		}
+        CASE(SKP_CUSTOM_03): {
+            Custom_03 = _state;
+		}
+        CASE(SKP_CUSTOM_04): {
+            Custom_04 = _state;
+		}
+        CASE(SKP_CUSTOM_05): {
+            Custom_05 = _state;
+		}
+        CASE(SKP_CUSTOM_06): {
+            Custom_06 = _state;
+		}        
+
+	}
+
+}
+
+//=====// EVENTS //=====//
+
+CHANGE Disarm_Fb    { keyPad.FeedbackEvent(SKP_DISARM_FB, Disarm_Fb); }
+CHANGE Arm_Away_Fb  { keyPad.FeedbackEvent(SKP_ARM_AWAY_FB, Arm_Away_Fb); }
+CHANGE Arm_Home_Fb  { keyPad.FeedbackEvent(SKP_ARM_HOME_FB, Arm_Home_Fb); }
+CHANGE Arm_Night_Fb { keyPad.FeedbackEvent(SKP_ARM_NIGHT_FB, Arm_Night_Fb); }
+
+CHANGE Custom_01_Fb { keyPad.FeedbackEvent(SKP_CUSTOM_01_FB, Custom_01_Fb); }
+CHANGE Custom_02_Fb { keyPad.FeedbackEvent(SKP_CUSTOM_02_FB, Custom_02_Fb); }
+CHANGE Custom_03_Fb { keyPad.FeedbackEvent(SKP_CUSTOM_03_FB, Custom_03_Fb); }
+CHANGE Custom_04_Fb { keyPad.FeedbackEvent(SKP_CUSTOM_04_FB, Custom_04_Fb); }
+CHANGE Custom_05_Fb { keyPad.FeedbackEvent(SKP_CUSTOM_05_FB, Custom_05_Fb); }
+CHANGE Custom_06_Fb { keyPad.FeedbackEvent(SKP_CUSTOM_06_FB, Custom_06_Fb); }
+
+//=====// MAIN //=====//
+
+FUNCTION Main () {
+
+	WAITFORINITIALIZATIONCOMPLETE();
+
+	keyPad.CreateSecurityKeypad (Security_ID, Keypad_Name);
+
+	IF (Custom_01_Label != "") { keyPad.AddFunctionButton (0, Custom_01_Label); }
+	IF (Custom_02_Label != "") { keyPad.AddFunctionButton (1, Custom_02_Label); }
+	IF (Custom_03_Label != "") { keyPad.AddFunctionButton (2, Custom_03_Label); }
+	IF (Custom_04_Label != "") { keyPad.AddFunctionButton (3, Custom_04_Label); }
+
+	IF (Custom_01_Label != "") { keyPad.AddCustomButton (Custom_01_Label); }
+	IF (Custom_02_Label != "") { keyPad.AddCustomButton (Custom_02_Label); }
+	IF (Custom_03_Label != "") { keyPad.AddCustomButton (Custom_03_Label); }
+	IF (Custom_04_Label != "") { keyPad.AddCustomButton (Custom_04_Label); }
+	IF (Custom_05_Label != "") { keyPad.AddCustomButton (Custom_05_Label); }
+	IF (Custom_06_Label != "") { keyPad.AddCustomButton (Custom_06_Label); }
+
+
+	REGISTERDELEGATE (keyPad, TriggerSendCommand, TriggerSendCommandHandler);
+
+	Core.RegisterSecurityKeypad (keyPad);
+
+}
+
