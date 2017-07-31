@@ -66,7 +66,6 @@ namespace FrameWork {
         public DelegateUshort2 SendZoneCommand { get; set; }
 
         // S+ delegate for requesting string-encoded list of Audio Sources
-        public delegate SimplSharpString DelegateStringRequest();
         public DelegateStringRequest AudioSourcesRequest { get; set; }
 
         // S+ delegate for requesting string-encoded list of Video Sources

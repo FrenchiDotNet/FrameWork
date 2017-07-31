@@ -15,12 +15,13 @@ namespace FrameWork {
      * CHANGELOG:
      * 
      * 1.1a - Added Light support, parsing commands.
+     * 1.2f - Added Security Keypad support.
      */
     public class Interface {
 
         //===================// Members //===================//
 
-        public string version = "1.2e";
+        public string version = "1.2f";
 
         public string name;
         public ushort id;
@@ -36,13 +37,10 @@ namespace FrameWork {
         internal List<Source> audioSourceList;
         internal List<Source> videoSourceList;
         internal List<sysMenuItem> sysMenuList;
-        internal List<Light> lightingLoadList;
-        internal List<Light> lightingPresetList;
-        internal List<Shade> shadeList;
-
-        //internal Dictionary<ushort, ushort> joinsDigital;
-        //internal Dictionary<ushort, ushort> joinsAnalog;
-        //internal Dictionary<ushort, string> joinsString;
+        internal List<Light> lightingLoadList;    // <- No longer being inverted for tablets, remove these 
+        internal List<Light> lightingPresetList;  // <- No longer being inverted for tablets, remove these
+        internal List<Shade> shadeList;           // <- No longer being inverted for tablets, remove these
+        internal List<SecurityKeypad> securityKeypadList;
 
         internal bool _invertSourceLists;
 
@@ -56,6 +54,10 @@ namespace FrameWork {
 
         public Zone currentZone;
         public Source currentSource;
+
+        internal SecurityKeypad currentSecurityKeypad;
+
+        public bool hasSecurityKeypad { get { return securityKeypadList.Count > 0 ? true : false; } }
 
         public DelegateUshort2 UpdateDigitalOutput { get; set; }
         public DelegateUshort2 UpdateAnalogOutput { get; set; }
@@ -126,6 +128,13 @@ namespace FrameWork {
         // S+ delegate for sending HVAC feedback
         public DelegateUshort3 HVACFbUpdate { get; set; }
 
+        // S+ delegate for requesting Security Keypad list
+        public DelegateStringRequest SecurityKeypadListRequest { get; set; }
+
+        // S+ delegates for sending Security Keypad feedback
+        public DelegateUshort2 SecurityKeypadFbUpdate { get; set; }
+        public DelegateUshortString SecurityKeypadTextFbUpdate { get; set; }
+
 
         //===================// Constructor //===================//
 
@@ -147,6 +156,7 @@ namespace FrameWork {
             lightingLoadList   = new List<Light>();
             lightingPresetList = new List<Light>();
             shadeList          = new List<Shade>();
+            securityKeypadList = new List<SecurityKeypad>();
 
         }
 
@@ -166,6 +176,7 @@ namespace FrameWork {
                 BuildZoneList();
                 BuildShareZones();
                 setCurrentZone(this.defaultZoneID);
+                ParseSecurityKeypads();
 
             }
             catch (Exception e) {
@@ -852,12 +863,100 @@ namespace FrameWork {
         }
 
         /**
+         * Method: ParseSecurityKeypads
+         * Access: internal
+         * @return: void
+         * Description: Parse string of comma-separated SecurityKeypads into a List<SecurityKeypad>
+         */
+        internal void ParseSecurityKeypads () {
+
+            // Request list from S+
+            string lTmp = SecurityKeypadListRequest().ToString();
+
+            if (lTmp == "")
+                return;
+
+            string[] list = lTmp.Replace(" ", "").Split(',');
+            ushort kpid;
+            for (int i = 0; i < list.Length; i++) {
+                kpid = ushort.Parse(list[i]);
+                if (Core.SecurityKeypads.ContainsKey(kpid))
+                    securityKeypadList.Add(Core.SecurityKeypads[kpid]);
+            }
+
+            // If keypads are available, enable interface button and set first keypad
+            if (hasSecurityKeypad) {
+                SetCurrentSecurityKeypad(securityKeypadList[0].id);
+                UpdateDigitalOutput((ushort)DigitalJoins.SecurityKeypadAvailable, 1);
+            }
+
+        }
+
+        /**
+         * Method: SetCurrentSecurityKeypad
+         * Access: public
+         * @return: void
+         * Description: Clear association with current keypad, set new subscriptions, update feedback states
+         */
+        public void SetCurrentSecurityKeypad (ushort _id) {
+
+            if (!Core.SecurityKeypads.ContainsKey(_id)) {
+                return;
+            }
+
+            // Unsubscribe from current Security Keypad
+            if (currentSecurityKeypad != null) {
+                currentSecurityKeypad.UpdateEvent     -= this.SecurityKeypadFbHandler;
+                currentSecurityKeypad.TextUpdateEvent -= this.SecurityKeypadTextFbHandler;
+            }
+
+            // Set new Security Keypad
+            currentSecurityKeypad = Core.SecurityKeypads[_id];
+
+            // Subscribe to new Security Keypad
+            currentSecurityKeypad.UpdateEvent     += this.SecurityKeypadFbHandler;
+            currentSecurityKeypad.TextUpdateEvent += this.SecurityKeypadTextFbHandler;
+
+            // Get current feedback
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.Disarm_Fb, (ushort)(currentSecurityKeypad.currentArmState == SecurityArmState.Disarmed ? 1 : 0));
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.ArmAway_Fb, (ushort)(currentSecurityKeypad.currentArmState == SecurityArmState.ArmAway ? 1 : 0));
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.ArmHome_Fb, (ushort)(currentSecurityKeypad.currentArmState == SecurityArmState.ArmHome ? 1 : 0));
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.ArmNight_Fb, (ushort)(currentSecurityKeypad.currentArmState == SecurityArmState.ArmNight ? 1 : 0));
+
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.Custom_01_Fb, (ushort)(currentSecurityKeypad.customButtonFeedback[0] ? 1 : 0));
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.Custom_02_Fb, (ushort)(currentSecurityKeypad.customButtonFeedback[1] ? 1 : 0));
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.Custom_03_Fb, (ushort)(currentSecurityKeypad.customButtonFeedback[2] ? 1 : 0));
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.Custom_04_Fb, (ushort)(currentSecurityKeypad.customButtonFeedback[3] ? 1 : 0));
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.Custom_05_Fb, (ushort)(currentSecurityKeypad.customButtonFeedback[4] ? 1 : 0));
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.Custom_06_Fb, (ushort)(currentSecurityKeypad.customButtonFeedback[5] ? 1 : 0));
+
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Text_KeypadStars, currentSecurityKeypad.currentKeypadStars);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Text_StatusFeedback, currentSecurityKeypad.currentStatusText);
+
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Function_States, currentSecurityKeypad.getEncodedFunctionStates());
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Function_01_Label, currentSecurityKeypad.functionButtonLabels[0]);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Function_02_Label, currentSecurityKeypad.functionButtonLabels[1]);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Function_03_Label, currentSecurityKeypad.functionButtonLabels[2]);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Function_04_Label, currentSecurityKeypad.functionButtonLabels[3]);
+
+            SecurityKeypadFbUpdate((ushort)SecurityCommand.Number_Of_Custom_Buttons, (ushort)currentSecurityKeypad.customButtonCount);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_01_Label, currentSecurityKeypad.customButtonLabels[0]);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_02_Label, currentSecurityKeypad.customButtonLabels[1]);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_03_Label, currentSecurityKeypad.customButtonLabels[2]);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_04_Label, currentSecurityKeypad.customButtonLabels[3]);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_05_Label, currentSecurityKeypad.customButtonLabels[4]);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_06_Label, currentSecurityKeypad.customButtonLabels[5]);
+
+        }
+
+        /**
          * Method: BuildShareZones
          * Access: internal
          * @return: void
          * Description: Parse string of comma-separated zones into a List<Zone>
          */
         internal void BuildShareZones() {
+
             // Request list from S+
             string sList = "";
             ushort sid;
@@ -1138,6 +1237,18 @@ namespace FrameWork {
         }
 
         /**
+         * Method: SecurityKeypadEvent
+         * Access: public
+         * Description: Handles Security Keypad button presses
+         */
+        public void SecurityKeypadEvent(ushort _action, ushort _state) {
+
+            if (currentSecurityKeypad != null)
+                currentSecurityKeypad.SendSecurityCommand((SecurityCommand)_action, _state);
+
+        }
+
+        /**
          * Method: TriggerUpdateDigitalOutput
          * Access: internal
          * @param: ushort _join
@@ -1363,6 +1474,34 @@ namespace FrameWork {
 
         }
 
+        /**
+         * Method: SecurityKeypadFbHandler
+         * Access: public
+         * @return: void
+         * Description: 
+         */
+        public void SecurityKeypadFbHandler(SecurityCommand _action, ushort _state) {
+
+            // Send Action and State to S+
+            if (SecurityKeypadFbUpdate != null)
+                SecurityKeypadFbUpdate((ushort)_action, _state);
+
+        }
+
+        /**
+         * Method: SecurityKeypadTextFbHandler
+         * Access: public
+         * @return: void
+         * Description: 
+         */
+        public void SecurityKeypadTextFbHandler(SecurityCommand _action, string _txt) {
+
+            // Send Action and State to S+
+            if (SecurityKeypadTextFbUpdate != null)
+                SecurityKeypadTextFbUpdate((ushort)_action, _txt);
+
+        }
+
     } // End Interface Class
 
     internal class sysMenuItem {
@@ -1430,7 +1569,8 @@ namespace FrameWork {
         ShareListAvailable = 31,
         LightingListAvailable,
         ShadeListAvailable,
-        HVACListAvailable
+        HVACListAvailable,
+        SecurityKeypadAvailable
     }
 
     public enum AnalogJoins {
@@ -1446,7 +1586,8 @@ namespace FrameWork {
         LightingList_NumberOfLoads = 32,
         LightingList_NumberOfPresets,
         ShadeList_NumberOfItems = 35,
-        HVACList_NumberOfItems
+        HVACList_NumberOfItems,
+        SecurityKeypadList_NumberOfItems
     }
 
     public enum SerialJoins {

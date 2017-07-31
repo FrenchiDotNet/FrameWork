@@ -23,6 +23,7 @@ namespace FrameWork {
         internal static Dictionary<ushort, Light> Lights;
         internal static Dictionary<ushort, Shade> Shades;
         internal static Dictionary<ushort, HVAC> HVACs;
+        internal static Dictionary<ushort, SecurityKeypad> SecurityKeypads;
         //internal static List<AudioDevice> AudioDevices;
 
         internal static SysInfoServer siServer;
@@ -34,14 +35,15 @@ namespace FrameWork {
         //===================// Constructor //===================//
 
         static Core() {
-            Sources    = new Dictionary<ushort, Source>();
-            Zones      = new Dictionary<ushort, Zone>();
-            Displays   = new Dictionary<ushort, Display>();
-            Interfaces = new Dictionary<ushort, Interface>();
-            Lifts      = new Dictionary<ushort, Lift>();
-            Lights     = new Dictionary<ushort, Light>();
-            Shades     = new Dictionary<ushort, Shade>();
-            HVACs      = new Dictionary<ushort, HVAC>();
+            Sources         = new Dictionary<ushort, Source>();
+            Zones           = new Dictionary<ushort, Zone>();
+            Displays        = new Dictionary<ushort, Display>();
+            Interfaces      = new Dictionary<ushort, Interface>();
+            Lifts           = new Dictionary<ushort, Lift>();
+            Lights          = new Dictionary<ushort, Light>();
+            Shades          = new Dictionary<ushort, Shade>();
+            HVACs           = new Dictionary<ushort, HVAC>();
+            SecurityKeypads = new Dictionary<ushort, SecurityKeypad>();
 
             startupTimer = new CTimer(startupTimerHandler, 30000);
 
@@ -65,6 +67,7 @@ namespace FrameWork {
             // Link Sources to Zones
             // {{-- TODO: Move this into a Zone.Initialize function --}}
             foreach (KeyValuePair<ushort, Zone> zn in Zones) {
+
                 try {
                     zn.Value.ParseAudioSources();
                     zn.Value.ParseVideoSources();
@@ -75,6 +78,7 @@ namespace FrameWork {
                 catch (Exception e) {
                     ConsoleMessage(String.Format("[ERROR] Error initializing Zone {0}: '{1}'", zn.Key, e));
                 }
+
             }
 
             // Link displays to zones
@@ -287,6 +291,7 @@ namespace FrameWork {
          * Description: S+ interface for associating a Lift SIMPL module with a S# object
          */
         public static ushort RegisterLift(ushort _zoneID, Lift _lift) {
+
             if (!Lifts.ContainsKey(_zoneID)) {
                 Lifts.Add(_zoneID, _lift);
                 return 1;
@@ -294,6 +299,25 @@ namespace FrameWork {
                 ConsoleMessage(String.Format("[ERROR] Error registering Lift {0}: Lift already registered for Zone", _zoneID));
                 return 0;
             }
+
+        }
+
+        /**
+         * Method: RegisterSecurityKeypad
+         * Access: public
+         * @return: ushort
+         * Description: 
+         */
+        public static ushort RegisterSecurityKeypad(SecurityKeypad _keypad) {
+
+            if (!Lifts.ContainsKey(_keypad.id)) {
+                SecurityKeypads.Add(_keypad.id, _keypad);
+                return 1;
+            } else {
+                ConsoleMessage(String.Format("[ERROR] Error registering Security Keypad {0} @ ID {1}: Security Keypad already registered", _keypad.name, _keypad.id));
+                return 0;
+            }
+
         }
 
         /**
@@ -323,6 +347,11 @@ namespace FrameWork {
 
         }
 
+        /**
+         * Method: ConfigureSysInfoServer
+         * Access: public
+         * Description: Start telnet server for SysInfo service
+         */
         static public void ConfigureSysInfoServer (ushort _portnum) {
             // Start SysInfoServer
             siServer = new SysInfoServer((int)_portnum, 256);
@@ -344,5 +373,7 @@ namespace FrameWork {
     public delegate void DelegateUshort3(ushort value1, ushort value2, ushort value3);
     public delegate void DelegateString(SimplSharpString value);
     public delegate void DelegateUshortString(ushort value1, SimplSharpString value2);
+    public delegate void DelegateUshortUshortString(ushort value1, ushort value2, SimplSharpString value23);
+    public delegate SimplSharpString DelegateStringRequest();
 
 }
