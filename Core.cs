@@ -207,20 +207,6 @@ namespace FrameWork {
         }
 
         /**
-         * Method: GetSourceInfo
-         * Access: public
-         * @return: void
-         * @param: Source _src
-         * @param: ushort _id
-         * Description: S+ interface for passing a reference to a Source object based on SourceID
-         */
-        public static void GetSourceInfo(ref Source _src, ushort _id) {
-            if (Sources.ContainsKey(_id)) {
-                _src = Sources[_id];
-            }
-        }
-
-        /**
          * Method: RegisterZone
          * Access: public
          * @return: ushort
@@ -294,9 +280,11 @@ namespace FrameWork {
 
             if (!Lifts.ContainsKey(_zoneID)) {
                 Lifts.Add(_zoneID, _lift);
+                ConsoleMessage(String.Format("[STARTUP] Registered Lift for Zone {0}", _zoneID));
+
                 return 1;
             } else {
-                ConsoleMessage(String.Format("[ERROR] Error registering Lift {0}: Lift already registered for Zone", _zoneID));
+                ConsoleMessage(String.Format("[ERROR] Error registering Lift for Zone {0}: Zone already has registered Lift", _zoneID));
                 return 0;
             }
 
@@ -312,6 +300,8 @@ namespace FrameWork {
 
             if (!Lifts.ContainsKey(_keypad.id)) {
                 SecurityKeypads.Add(_keypad.id, _keypad);
+                ConsoleMessage(String.Format("[STARTUP] Registered Security Keypad {0} @ ID {1}", _keypad.name, _keypad.id));
+
                 return 1;
             } else {
                 ConsoleMessage(String.Format("[ERROR] Error registering Security Keypad {0} @ ID {1}: Security Keypad already registered", _keypad.name, _keypad.id));
@@ -331,6 +321,20 @@ namespace FrameWork {
             //AudioDevices.Add(_dev);
             //return 1;
         //}
+
+        /**
+         * Method: GetSourceInfo
+         * Access: public
+         * @return: void
+         * @param: Source _src
+         * @param: ushort _id
+         * Description: S+ interface for passing a reference to a Source object based on SourceID
+         */
+        public static void GetSourceInfo(ref Source _src, ushort _id) {
+            if (Sources.ContainsKey(_id)) {
+                _src = Sources[_id];
+            }
+        }
 
         /**
          * Method: SetZoneSource
