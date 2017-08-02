@@ -173,6 +173,17 @@ namespace FrameWork {
                         reply += String.Format("[{0}] {1}\r\n", inf.Value.id, inf.Value.name);
                     }
                     break;
+                case "getsecuritylist":
+                    foreach (KeyValuePair<ushort, SecurityKeypad> kp in Core.SecurityKeypads) {
+                        reply += String.Format("[{0}] {1}\r\n", kp.Value.id, kp.Value.name);
+                    }
+                    break;
+                case "getinterfacesecurity":
+                    if (args.Length > 0) {
+                        reply = cmdGetInterfaceSecurity(Int32.Parse(args[0]));
+                    } else
+                        reply = "No InterfaceID Specified for GetInterfaceSecurity\r\n";
+                    break;
                 case "help":
                     reply = "getroomlist\r\n" +
                             "getsourcelist\r\n" +
@@ -184,7 +195,9 @@ namespace FrameWork {
                             "getlightslist\r\n" +
                             "getshadeslist\r\n" +
                             "gethvaclist\r\n" +
-                            "getinterfacelist\r\n";
+                            "getinterfacelist\r\n" +
+                            "getsecuritylist\r\n" +
+                            "getinterfacesecurity <InterfaceID>\r\n";
                     break;
                 case "bye":
                     replyAndEndConnection("Goodbye.", _cli);
@@ -373,6 +386,39 @@ namespace FrameWork {
 
             } else
                 msg += String.Format("Unknown ZoneID: {0}\r\n", _roomID);
+
+            return msg;
+
+        }
+
+        /**
+         * Method: cmdGetInterfaceSecurity
+         * Access: private
+         * @return: string
+         * @param: int _intID
+         * Description: ..
+         */
+        private string cmdGetInterfaceSecurity(int _intID) {
+
+            string msg = "";
+            int i;
+            Interface inf;
+            SecurityKeypad kp;
+
+            if (Core.Interfaces.ContainsKey((ushort)_intID)) {
+                inf = Core.Interfaces[(ushort)_intID];
+
+                if (inf.hasSecurityKeypad) {
+                    msg += "Security Keypads:\r\n";
+                    for (i = 0; i < inf.securityKeypadList.Count; i++) {
+                        kp = inf.securityKeypadList[i];
+                        msg += String.Format("\t[{0}] {1}\r\n", kp.id, kp.name);
+                    }
+                } else
+                    msg += "No Security Keypads Assigned\r\n";
+
+            } else
+                msg += String.Format("Unknown InterfaceID: {0}\r\n", _intID);
 
             return msg;
 

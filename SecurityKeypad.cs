@@ -22,8 +22,9 @@ namespace FrameWork {
         public int customButtonCount;
 
         public SecurityArmState currentArmState;
-        public string           currentStatusText;
-        public string           currentKeypadStars;
+        public string           currentStatusText_Line1,
+                                currentStatusText_Line2,
+                                currentKeypadStars;
         public List<string>     customButtonLabels;
         public string[]         functionButtonLabels;
         public bool[]           customButtonFeedback;
@@ -40,21 +41,22 @@ namespace FrameWork {
 
         //===================// Constructor //===================//
 
-        public SecurityKeypad() {
+        public SecurityKeypad () {
 
-            currentStatusText    = "";
-            currentKeypadStars   = "";
-            customButtonCount    = 0;
-            customButtonLabels   = new List<string> ();
-            functionButtonLabels = new string[4];
-            customButtonFeedback = new bool[6];
+            currentStatusText_Line1 = "";
+            currentStatusText_Line2 = "";
+            currentKeypadStars      = "";
+            customButtonCount       = 0;
+            customButtonLabels      = new List<string>();
+            functionButtonLabels    = new string[4];
+            customButtonFeedback    = new bool[6];
 
         }
 
         //===================// Methods //===================//
 
         // Function to initialize class variables
-        public void CreateSecurityKeypad(ushort _id, string _name) {
+        public void CreateSecurityKeypad (ushort _id, string _name) {
 
             this.id   = _id;
             this.name = _name;
@@ -81,7 +83,7 @@ namespace FrameWork {
         // Function to send Function Button labels to Interfaces
 
         /**
-        * Method: SendHVACCommand
+        * Method: SendSecurityCommand
         * Access: public
         * Description: Receive Commands from Interfaces and pass to S+ via TriggerSendCommand delegate
         */
@@ -120,28 +122,22 @@ namespace FrameWork {
                         currentArmState = SecurityArmState.Disarmed;
                     break;
                 case SecurityCommand.Custom_01_Fb:
-                    if (_state == 1)
-                        customButtonFeedback[0] = _state == 1 ? true : false;
+                    customButtonFeedback[0] = _state == 1 ? true : false;
                     break;
                 case SecurityCommand.Custom_02_Fb:
-                    if (_state == 1)
-                        customButtonFeedback[1] = _state == 1 ? true : false;
+                    customButtonFeedback[1] = _state == 1 ? true : false;
                     break;
                 case SecurityCommand.Custom_03_Fb:
-                    if (_state == 1)
-                        customButtonFeedback[2] = _state == 1 ? true : false;
+                    customButtonFeedback[2] = _state == 1 ? true : false;
                     break;
                 case SecurityCommand.Custom_04_Fb:
-                    if (_state == 1)
-                        customButtonFeedback[3] = _state == 1 ? true : false;
+                    customButtonFeedback[3] = _state == 1 ? true : false;
                     break;
                 case SecurityCommand.Custom_05_Fb:
-                    if (_state == 1)
-                        customButtonFeedback[4] = _state == 1 ? true : false;
+                    customButtonFeedback[4] = _state == 1 ? true : false;
                     break;
                 case SecurityCommand.Custom_06_Fb:
-                    if (_state == 1)
-                        customButtonFeedback[5] = _state == 1 ? true : false;
+                    customButtonFeedback[5] = _state == 1 ? true : false;
                     break;
 
             }
@@ -163,8 +159,11 @@ namespace FrameWork {
 
             switch (act) {
 
-                case SecurityCommand.Text_StatusFeedback:
-                    currentStatusText = _txt;
+                case SecurityCommand.Text_StatusFeedback_Line1:
+                    currentStatusText_Line1 = _txt;
+                    break;
+                case SecurityCommand.Text_StatusFeedback_Line2:
+                    currentStatusText_Line2 = _txt;
                     break;
                 case SecurityCommand.Text_KeypadStars:
                     currentKeypadStars = _txt;
@@ -252,7 +251,8 @@ namespace FrameWork {
         Custom_05_Fb,
         Custom_06_Fb,
         Text_KeypadStars,
-        Text_StatusFeedback,
+        Text_StatusFeedback_Line1,
+        Text_StatusFeedback_Line2,
         Number_Of_Custom_Buttons,
         Function_States,
         Function_01_Label,

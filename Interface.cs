@@ -21,7 +21,7 @@ namespace FrameWork {
 
         //===================// Members //===================//
 
-        public string version = "1.2f";
+        public string version = "1.2g";
 
         public string name;
         public ushort id;
@@ -130,6 +130,9 @@ namespace FrameWork {
         // S+ delegates for sending Security Keypad feedback
         public DelegateUshort2 SecurityKeypadFbUpdate { get; set; }
         public DelegateUshortString SecurityKeypadTextFbUpdate { get; set; }
+
+        // S+ delegates for sending Pool feedback
+        public DelegateUshortUshortString PoolFbUpdate { get; set; }
 
 
         //===================// Constructor //===================//
@@ -924,7 +927,8 @@ namespace FrameWork {
             SecurityKeypadFbUpdate((ushort)SecurityCommand.Custom_06_Fb, (ushort)(currentSecurityKeypad.customButtonFeedback[5] ? 1 : 0));
 
             SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Text_KeypadStars, currentSecurityKeypad.currentKeypadStars);
-            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Text_StatusFeedback, currentSecurityKeypad.currentStatusText);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Text_StatusFeedback_Line1, currentSecurityKeypad.currentStatusText_Line1);
+            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Text_StatusFeedback_Line2, currentSecurityKeypad.currentStatusText_Line2);
 
             SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Function_States, currentSecurityKeypad.getEncodedFunctionStates());
             SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Function_01_Label, currentSecurityKeypad.functionButtonLabels[0]);

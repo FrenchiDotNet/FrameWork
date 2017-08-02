@@ -26,6 +26,8 @@ namespace FrameWork {
         internal static Dictionary<ushort, SecurityKeypad> SecurityKeypads;
         //internal static List<AudioDevice> AudioDevices;
 
+        internal static Pool pool;
+
         internal static SysInfoServer siServer;
 
         static private CTimer startupTimer;
@@ -35,6 +37,7 @@ namespace FrameWork {
         //===================// Constructor //===================//
 
         static Core() {
+
             Sources         = new Dictionary<ushort, Source>();
             Zones           = new Dictionary<ushort, Zone>();
             Displays        = new Dictionary<ushort, Display>();
@@ -51,6 +54,7 @@ namespace FrameWork {
             RegisterSource(new Source("Off", 0, 169, 169));
 
             ConsoleMessage("[STARTUP] FrameWork Core Initialized...");
+
         }
 
         //===================// Methods //===================//
@@ -294,7 +298,7 @@ namespace FrameWork {
          * Method: RegisterSecurityKeypad
          * Access: public
          * @return: ushort
-         * Description: 
+         * Description: ...
          */
         public static ushort RegisterSecurityKeypad(SecurityKeypad _keypad) {
 
@@ -305,6 +309,26 @@ namespace FrameWork {
                 return 1;
             } else {
                 ConsoleMessage(String.Format("[ERROR] Error registering Security Keypad {0} @ ID {1}: Security Keypad already registered", _keypad.name, _keypad.id));
+                return 0;
+            }
+
+        }
+
+        /**
+         * Method: RegisterPool
+         * Access: public
+         * @return: ushort
+         * Description: ...
+         */
+        public static ushort RegisterPool(Pool _pool) {
+
+            if (pool == null) {
+                pool = _pool;
+                ConsoleMessage(String.Format("[STARTUP] Registered Pool Controller"));
+
+                return 1;
+            } else {
+                ConsoleMessage(String.Format("[ERROR] Error registering Pool Controller: Pool Controller already registered."));
                 return 0;
             }
 

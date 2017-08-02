@@ -5,6 +5,7 @@ Programmer: Ryan French
 CHANGELOG:
 
 1.2 - 7/11/17 - Added Lights parameter, SIMPL# integration.
+1.2b - 8/2/17 - Added Mute Off command when Volume button pressed.
 
 */
 
@@ -112,9 +113,13 @@ CALLBACK FUNCTION UpdateDisplayAvailableHandler(INTEGER _state) {
 CALLBACK FUNCTION SendZoneCommandHandler(INTEGER _join, INTEGER _state) {
 	SWITCH(_join) {
     	CASE(DJ_HWVOLUMEUP): {
+			IF(AudioDevice_MuteFb && _state = 1)
+				UpdateHWMuteStateHandler(0);
         	AudioDevice_VolumeUp = _state;
 		}
 		CASE(DJ_HWVOLUMEDN): {
+			IF(AudioDevice_MuteFb && _state = 1)
+				UpdateHWMuteStateHandler(0);
         	AudioDevice_VolumeDown = _state;
 		}
 	}
