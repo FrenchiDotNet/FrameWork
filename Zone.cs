@@ -42,6 +42,8 @@ namespace FrameWork {
         public Display display;
         public Lift    lift;
 
+        public List<Interface> subscribedInterfaces;
+
         public DelegateString UpdateCurrentSourceName { get; set; }
         public DelegateUshort UpdateCurrentSourceID { get; set; }
         public DelegateUshort UpdateCurrentVolume { get; set; }
@@ -83,6 +85,9 @@ namespace FrameWork {
         // S+ delegate for requesting string-encoded list of HVAC Zones
         public DelegateStringRequest HVACRequest { get; set; }
 
+        // S+ delegate for sending inUse state
+        public DelegateUshort InUseFb { get; set; }
+
         //===================// Constructor //===================//
 
         public Zone() {
@@ -95,6 +100,8 @@ namespace FrameWork {
             lightingPresets = new List<Light>();
             shades          = new List<Shade>();
             hvacs           = new List<HVAC>();
+
+            subscribedInterfaces = new List<Interface>();
 
         }
 
@@ -144,6 +151,54 @@ namespace FrameWork {
             // Register Zone with Source
             if (_sid != 0)
                 Core.Sources[_sid].RegisterZone (this);
+
+        }
+
+        /**
+         * Method:      updateInUseFb
+         * Access:      public
+         * @param:      ushort _sid
+         * Description: ...
+         */
+        private void updateInUseFb() {
+
+            if (subscribedInterfaces.Count > 0) {
+                if (InUseFb != null)
+                    InUseFb(1);
+            } else {
+                if (InUseFb != null)
+                    InUseFb(0);
+            }
+
+        }
+
+        /**
+         * Method:      subscribeInterface
+         * Access:      public
+         * @param:      ushort _sid
+         * Description: ...
+         */
+        public void subscribeInterface(Interface _int) {
+
+            if (!subscribedInterfaces.Contains(_int)) {
+                subscribedInterfaces.Add(_int);
+                updateInUseFb();
+            }
+
+        }
+
+        /**
+         * Method:      unsubscribeInterface
+         * Access:      public
+         * @param:      ushort _sid
+         * Description: ...
+         */
+        public void unsubscribeInterface(Interface _int) {
+
+            if (subscribedInterfaces.Contains(_int)) {
+                subscribedInterfaces.Remove(_int);
+                updateInUseFb();
+            }
 
         }
 

@@ -302,7 +302,7 @@ namespace FrameWork {
          */
         public static ushort RegisterSecurityKeypad(SecurityKeypad _keypad) {
 
-            if (!Lifts.ContainsKey(_keypad.id)) {
+            if (!SecurityKeypads.ContainsKey(_keypad.id)) {
                 SecurityKeypads.Add(_keypad.id, _keypad);
                 ConsoleMessage(String.Format("[STARTUP] Registered Security Keypad {0} @ ID {1}", _keypad.name, _keypad.id));
 

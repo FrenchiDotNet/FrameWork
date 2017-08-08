@@ -21,7 +21,7 @@ namespace FrameWork {
 
         //===================// Members //===================//
 
-        public string version = "1.2g";
+        public string version = "1.2h";
 
         public string name;
         public ushort id;
@@ -39,6 +39,7 @@ namespace FrameWork {
         internal List<SecurityKeypad> securityKeypadList;
 
         internal bool _invertSourceLists;
+        internal bool _enablePoolControl;
 
         public ushort sourceListDisplaySize;
         public ushort sourceListMaxSize;
@@ -46,7 +47,8 @@ namespace FrameWork {
         public ushort lightingPresetsDisplaySize;
         public ushort shadeListDisplaySize;
         public ushort hvacListDisplaySize;
-        public ushort invertSourceLists { set { _invertSourceLists = value == 1 ? true : false; } }
+        public ushort invertSourceLists { set { _invertSourceLists = value == 1 ? true : false; } get { return (ushort)(_invertSourceLists ? 1 : 0); } }
+        public ushort enablePoolControl { set { _enablePoolControl = value == 1 ? true : false; } get { return (ushort)(_enablePoolControl ? 1 : 0); } }
 
         public Zone currentZone;
         public Source currentSource;
@@ -174,6 +176,8 @@ namespace FrameWork {
                 setCurrentZone(this.defaultZoneID);
                 ParseSecurityKeypads();
 
+                PoolConnect();
+
             }
             catch (Exception e) {
 
@@ -235,6 +239,9 @@ namespace FrameWork {
                             currentZone.hvacs[j].UpdateEvent -= this.HVACFbHandler;
                         }
                     }
+
+                    // Remove self from Zone's Interface List
+                    this.currentZone.unsubscribeInterface(this);
 
                 }
 
@@ -313,6 +320,37 @@ namespace FrameWork {
 
                 // Build HVAC List
                 BuildHVACList ();
+
+                // Add self to Zone's Interface List
+                this.currentZone.subscribeInterface(this);
+
+            }
+
+        }
+
+        /**
+         * Method: PoolConnect
+         * Access: private
+         * @return: void
+         * Description: ...
+         */
+        private void PoolConnect() {
+
+            if (_enablePoolControl && Core.pool != null) {
+
+                int count = 0;
+
+                Core.pool.UpdateEvent += this.PoolFbHandler;
+                UpdateDigitalOutput((ushort)DigitalJoins.PoolControlAvailable, 1);
+
+                for (int i = 0; i < 12; i++ ) {
+                    this.PoolFbUpdate((ushort)PoolCommand.Aux_Label_Fb, (ushort)(i + 1), Core.pool.auxLabels[i]);
+                    if (Core.pool.auxLabels[i] != "")
+                        count++;
+                }
+
+                if (count > 0)
+                    this.PoolFbUpdate((ushort)PoolCommand.Aux_Count_Fb, (ushort)count, "");
 
             }
 
@@ -937,12 +975,30 @@ namespace FrameWork {
             SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Function_04_Label, currentSecurityKeypad.functionButtonLabels[3]);
 
             SecurityKeypadFbUpdate((ushort)SecurityCommand.Number_Of_Custom_Buttons, (ushort)currentSecurityKeypad.customButtonCount);
-            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_01_Label, currentSecurityKeypad.customButtonLabels[0]);
-            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_02_Label, currentSecurityKeypad.customButtonLabels[1]);
-            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_03_Label, currentSecurityKeypad.customButtonLabels[2]);
-            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_04_Label, currentSecurityKeypad.customButtonLabels[3]);
-            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_05_Label, currentSecurityKeypad.customButtonLabels[4]);
-            SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_06_Label, currentSecurityKeypad.customButtonLabels[5]);
+            if (currentSecurityKeypad.customButtonLabels.Count > 0)
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_01_Label, currentSecurityKeypad.customButtonLabels[0]);
+            else
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_01_Label, "");
+            if (currentSecurityKeypad.customButtonLabels.Count > 1)
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_02_Label, currentSecurityKeypad.customButtonLabels[1]);
+            else
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_02_Label, "");
+            if (currentSecurityKeypad.customButtonLabels.Count > 2)
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_03_Label, currentSecurityKeypad.customButtonLabels[2]);
+            else
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_03_Label, "");
+            if (currentSecurityKeypad.customButtonLabels.Count > 3)
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_04_Label, currentSecurityKeypad.customButtonLabels[3]);
+            else
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_04_Label, "");
+            if (currentSecurityKeypad.customButtonLabels.Count > 4)
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_05_Label, currentSecurityKeypad.customButtonLabels[4]);
+            else
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_05_Label, "");
+            if (currentSecurityKeypad.customButtonLabels.Count > 5)
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_06_Label, currentSecurityKeypad.customButtonLabels[5]);
+            else
+                SecurityKeypadTextFbUpdate((ushort)SecurityCommand.Custom_06_Label, "");
 
         }
 
@@ -1246,6 +1302,18 @@ namespace FrameWork {
         }
 
         /**
+         * Method: PoolEvent
+         * Access: public
+         * Description: Handles Security Keypad button presses
+         */
+        public void PoolEvent(ushort _action, ushort _state, string _text) {
+
+            if (Core.pool != null)
+                Core.pool.SendPoolCommand((PoolCommand)_action, _state, _text);
+
+        }
+
+        /**
          * Method: TriggerUpdateDigitalOutput
          * Access: internal
          * @param: ushort _join
@@ -1499,6 +1567,21 @@ namespace FrameWork {
 
         }
 
+        /**
+         * Method: PoolFbHandler
+         * Access: public
+         * @return: void
+         * Description: 
+         */
+        public void PoolFbHandler(PoolCommand _action, ushort _state, string _txt) {
+
+            // Send Action and State to S+
+            if (PoolFbUpdate != null)
+                PoolFbUpdate((ushort)_action, _state, _txt);
+
+        }
+
+
     } // End Interface Class
 
     internal class sysMenuItem {
@@ -1567,7 +1650,8 @@ namespace FrameWork {
         LightingListAvailable,
         ShadeListAvailable,
         HVACListAvailable,
-        SecurityKeypadAvailable
+        SecurityKeypadAvailable,
+        PoolControlAvailable
     }
 
     public enum AnalogJoins {

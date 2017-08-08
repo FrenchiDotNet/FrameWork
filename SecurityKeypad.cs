@@ -48,8 +48,9 @@ namespace FrameWork {
             currentKeypadStars      = "";
             customButtonCount       = 0;
             customButtonLabels      = new List<string>();
-            functionButtonLabels    = new string[4];
-            customButtonFeedback    = new bool[6];
+            functionButtonLabels    = new string[4] {"", "", "", ""};
+            customButtonFeedback    = new bool[6] {false, false, false, false, false, false};
+            currentArmState         = SecurityArmState.Unknown;
 
         }
 
@@ -186,8 +187,9 @@ namespace FrameWork {
 
             string states = "";
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++) {
                 states = states + (functionButtonLabels[i] != "" ? '1' : '0');
+            }
 
             return states;
 

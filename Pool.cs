@@ -44,6 +44,8 @@ namespace FrameWork {
             currentAuxStatus = new bool[12];
             auxLabels        = new string[12];
 
+            currentMode = PoolMode.Unknown;
+
         }
 
         //===================// Methods //===================//
@@ -89,22 +91,22 @@ namespace FrameWork {
                     filterPumpOn = _state == 1 ? true : false;
                     break;
                 case PoolCommand.Aux_Fb:
-                    currentAuxStatus[_state] = _text == "T" ? true : false;
+                    currentAuxStatus[int.Parse(_text)] = _state == 1 ? true : false;
                     break;
                 case PoolCommand.Pool_Setpoint_Fb:
-                    currentPoolSetpoint = _state;
+                    currentPoolSetpoint = float.Parse(_text);
                     break;
                 case PoolCommand.Pool_Temp_Fb:
-                    currentPoolTemp = _state;
+                    currentPoolTemp = float.Parse(_text); ;
                     break;
                 case PoolCommand.Spa_Setpoint_Fb:
-                    currentSpaSetpoint = _state;
+                    currentSpaSetpoint = float.Parse(_text); ;
                     break;
                 case PoolCommand.Spa_Temp_Fb:
-                    currentSpaTemp = _state;
+                    currentSpaTemp = float.Parse(_text); ;
                     break;
                 case PoolCommand.Ambient_Temp_Fb:
-                    currentAmbientTemp = _state;
+                    currentAmbientTemp = float.Parse(_text); ;
                     break;
 
             }
@@ -158,7 +160,9 @@ namespace FrameWork {
         Pool_Temp_Fb,
         Spa_Setpoint_Fb,
         Spa_Temp_Fb,
-        Ambient_Temp_Fb
+        Ambient_Temp_Fb,
+        Aux_Count_Fb,
+        Aux_Label_Fb
     }
 
 }
