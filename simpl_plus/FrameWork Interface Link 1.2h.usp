@@ -3,14 +3,14 @@ Dealer Name: Ask The Advisors
 Programmer: Ryan French
 */
 
-#SYMBOL_NAME "FrameWork Interface Link 1.2g"
+#SYMBOL_NAME "FrameWork Interface Link 1.2h"
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
 #ENABLE_TRACE
 #PRINT_TO_TRACE
 #USER_SIMPLSHARP_LIBRARY "FrameWork"
 
-#DEFINE_CONSTANT TARGET_SSHARP_VERSION "1.2g"
+#DEFINE_CONSTANT TARGET_SSHARP_VERSION "1.2h"
 
 #DEFINE_CONSTANT TRUE 1
 #DEFINE_CONSTANT FALSE 0
@@ -32,7 +32,8 @@ Programmer: Ryan French
 #DEFINE_CONSTANT DJ_LIGHTINGLISTAVAILABLE   32
 #DEFINE_CONSTANT DJ_SHADELISTAVAILABLE      33
 #DEFINE_CONSTANT DJ_HVACLISTAVAILABLE       34
-#DEFINE_CONSTANT DJ_SECURITYKAVAILABLE      35
+#DEFINE_CONSTANT DJ_SECURITYKPAVAILABLE     35
+#DEFINE_CONSTANT DJ_POOLCONTROLAVAILABLE    36
 
 #DEFINE_CONSTANT AJ_CURRENTZONE       1
 #DEFINE_CONSTANT AJ_CURRENTSOURCE     2
@@ -122,6 +123,8 @@ Programmer: Ryan French
 #DEFINE_CONSTANT HTYPE_HEATCOOL     2
 #DEFINE_CONSTANT HTYPE_HEATCOOLAUTO 3
 
+// Security
+
 #DEFINE_CONSTANT SKP_KEYPAD_0         1
 #DEFINE_CONSTANT SKP_KEYPAD_1         2
 #DEFINE_CONSTANT SKP_KEYPAD_2         3
@@ -181,6 +184,33 @@ Programmer: Ryan French
 #DEFINE_CONSTANT SKP_CUSTOM_TXT_05   57
 #DEFINE_CONSTANT SKP_CUSTOM_TXT_06   58
 
+// Pool
+
+#DEFINE_CONSTANT PLC_MODE_POOL    1
+#DEFINE_CONSTANT PLC_MODE_SPA     2
+#DEFINE_CONSTANT PLC_POOL_SP_UP   3
+#DEFINE_CONSTANT PLC_POOL_SP_DN   4
+#DEFINE_CONSTANT PLC_POOL_HT      5
+#DEFINE_CONSTANT PLC_SPA_SP_UP    6
+#DEFINE_CONSTANT PLC_SPA_SP_DN    7
+#DEFINE_CONSTANT PLC_SPA_HT       8
+#DEFINE_CONSTANT PLC_FILTER       9
+#DEFINE_CONSTANT PLC_AUX          10
+#DEFINE_CONSTANT PLC_MODE_POOL_FB 11
+#DEFINE_CONSTANT PLC_MODE_SPA_FB  12
+#DEFINE_CONSTANT PLC_POOL_HT_FB   13
+#DEFINE_CONSTANT PLC_SPA_HT_FB    14
+#DEFINE_CONSTANT PLC_FILTER_FB    15
+#DEFINE_CONSTANT PLC_AUX_FB       16
+#DEFINE_CONSTANT PLC_POOL_SP_FB   17
+#DEFINE_CONSTANT PLC_POOL_TMP_FB  18
+#DEFINE_CONSTANT PLC_SPA_SP_FB    19
+#DEFINE_CONSTANT PLC_SPA_TMP_FB   20
+#DEFINE_CONSTANT PLC_AMBIENT_FB   21
+#DEFINE_CONSTANT PLC_AUX_COUNT    22
+#DEFINE_CONSTANT PLC_AUX_LABEL    23
+
+
 //=====// I/O //=====//
 
 DIGITAL_INPUT _SKIP_,
@@ -222,6 +252,15 @@ DIGITAL_INPUT _SKIP_,
 			  Security_Custom_04,
 			  Security_Custom_05,
 			  Security_Custom_06,
+			  Pool_Mode_Pool,
+			  Pool_Mode_Spa,
+			  Pool_Pool_Setpoint_Up,
+			  Pool_Pool_Setpoint_Down,
+			  Pool_Pool_Heater_Toggle,
+			  Pool_Spa_Setpoint_Up,
+			  Pool_Spa_Setpoint_Down,
+			  Pool_Spa_Heater_Toggle,
+			  Pool_Filter_Pump_Toggle,
 			  ZoneList[ZONELISTSIZE],
 			  SourceList_Listen[SOURCELISTSIZE],
 			  SourceList_Watch[SOURCELISTSIZE],
@@ -254,7 +293,8 @@ DIGITAL_INPUT _SKIP_,
 			  HVAC_FanSpeed_Low[HVACLISTSIZE],
 			  HVAC_FanSpeed_Medium[HVACLISTSIZE],
 			  HVAC_FanSpeed_High[HVACLISTSIZE],
-			  HVAC_FanSpeed_Max[HVACLISTSIZE];
+			  HVAC_FanSpeed_Max[HVACLISTSIZE],
+			  Pool_Aux_Toggle[12];
 
 DIGITAL_OUTPUT _SKIP_,
 			   _SKIP_,
@@ -269,6 +309,7 @@ DIGITAL_OUTPUT _SKIP_,
 			   Show_Shades_Button,
 			   Show_HVAC_Button,
 			   Show_Security_Button,
+			   Show_PoolControl_Button,
 			   Request_TVControl_Popup,
 			   Request_LiftControl_Popup,
 			   Request_AVRControl_Popup,
@@ -287,7 +328,12 @@ DIGITAL_OUTPUT _SKIP_,
 			   Security_Custom_03_Fb,
 			   Security_Custom_04_Fb,
 			   Security_Custom_05_Fb,
-			   Security_Custom_06_Fb,        
+			   Security_Custom_06_Fb,
+			   Pool_Mode_Pool_Fb,
+			   Pool_Mode_Spa_Fb,
+			   Pool_Pool_Heater_Fb,
+			   Pool_Spa_Heater_Fb,
+			   Pool_Filter_Pump_Fb,        
 			   ZoneList_Fb[ZONELISTSIZE],
 			   SourceList_Listen_Fb[SOURCELISTSIZE],
 			   SourceList_Listen_Visible[SOURCELISTSIZE],
@@ -332,7 +378,8 @@ DIGITAL_OUTPUT _SKIP_,
 			   HVAC_Show_Modes_HeatCool[HVACLISTSIZE],
 			   HVAC_Show_Modes_HeatCoolAuto[HVACLISTSIZE],
 			   HVAC_Show_FanModes[HVACLISTSIZE],
-			   HVAC_Show_FanSpeeds[HVACLISTSIZE];
+			   HVAC_Show_FanSpeeds[HVACLISTSIZE],
+			   Pool_Aux_Fb[12];
 
 ANALOG_OUTPUT CurrentZone,
 			  CurrentSource,
@@ -347,13 +394,19 @@ ANALOG_OUTPUT CurrentZone,
 			  ShadeList_NumberOfItems,
 			  HVACList_NumberOfItems,
 			  SecurityList_NumberOfItems,
-			  Security_CustomButtonList_NumberOfItems;
+			  Security_CustomButtonList_NumberOfItems,
+			  Pool_AuxList_NumberOfItems;
 
 STRING_OUTPUT Current_Zone_Name,
 			  Current_Source_Name,
 			  Security_Keypad_Stars,
 			  Security_Keypad_Status_Line1,
-			  Security_Keypad_Status_Line2;
+			  Security_Keypad_Status_Line2,
+			  Pool_Pool_Setpoint_Fb,
+			  Pool_Pool_Temperature_Fb,
+			  Pool_Spa_Setpoint_Fb,
+			  Pool_Spa_Temperature_Fb,
+			  Pool_Ambient_Temperature_Fb;
 
 ANALOG_OUTPUT ZoneList_Icons[ZONELISTSIZE],
 			  SourceList_Listen_Icons[SOURCELISTSIZE],
@@ -376,11 +429,13 @@ STRING_OUTPUT ZoneList_Label[ZONELISTSIZE],
 			  Shade_Name[SHADELISTSIZE],
 			  HVAC_Name[HVACLISTSIZE],
 			  Security_Function_Label[4],
-			  Security_Custom_Label[6];
+			  Security_Custom_Label[6],
+			  Pool_AuxList_Label[12];
 
 INTEGER_PARAMETER InterfaceID, 
 				  DefaultZoneID,
-				  InvertSourceLists;
+				  InvertSourceLists,
+				  EnablePoolControls;
 
 STRING_PARAMETER  InterfaceName[24], 
 				  AvailableZones[192], 
@@ -417,7 +472,9 @@ FUNCTION ParseSourceListFb(INTEGER _type, STRING _states) {
 }
 
 CALLBACK FUNCTION UpdateDigitalOutputHandler(INTEGER _join, INTEGER _state) {
+
 	SWITCH(_join) {
+
     	CASE(DJ_ENTERSETUP): {	
         	PULSE(10, Enter_Setup);
 		}
@@ -427,8 +484,11 @@ CALLBACK FUNCTION UpdateDigitalOutputHandler(INTEGER _join, INTEGER _state) {
 		CASE(DJ_HVACLISTAVAILABLE): {
         	Show_HVAC_Button = _state;
 		}
-		CASE(DJ_SECURITYKAVAILABLE): {
+		CASE(DJ_SECURITYKPAVAILABLE): {
         	Show_Security_Button = _state;
+		}
+		CASE(DJ_POOLCONTROLAVAILABLE): {
+        	Show_PoolControl_Button = _state;
 		}
 		CASE(DJ_MUTEFB): {
             Zone_Mute_Fb = _state;
@@ -442,7 +502,9 @@ CALLBACK FUNCTION UpdateDigitalOutputHandler(INTEGER _join, INTEGER _state) {
 		CASE(DJ_POPUPAVRCMD): {
         	PULSE(10, Request_AVRControl_Popup);
 		}
+
 	}
+
 }
 
 CALLBACK FUNCTION UpdateAnalogOutputHandler(INTEGER _join, INTEGER _val) {
@@ -984,6 +1046,54 @@ CALLBACK FUNCTION SecurityKeypadTextFbUpdateHandler (INTEGER _action, STRING _te
 
 }
 
+CALLBACK FUNCTION PoolFbUpdateHandler (INTEGER _cmd, INTEGER _state, STRING _text) {
+
+	SWITCH (_cmd) {
+
+    	CASE (PLC_MODE_POOL_FB): {
+        	Pool_Mode_Pool_Fb = _state;
+		}
+    	CASE (PLC_MODE_SPA_FB): {
+        	Pool_Mode_Spa_Fb = _state;
+		}
+    	CASE (PLC_POOL_HT_FB): {
+        	Pool_Pool_Heater_Fb = _state;
+		}
+    	CASE (PLC_SPA_HT_FB): {
+        	Pool_Spa_Heater_Fb = _state;
+		}
+    	CASE (PLC_FILTER_FB): {
+        	Pool_Filter_Pump_Fb = _state;
+		}
+    	CASE (PLC_AUX_FB): {
+        	Pool_Aux_Fb[ATOI(_text)+1] = _state;
+		}
+    	CASE (PLC_POOL_SP_FB): {
+        	Pool_Pool_Setpoint_Fb = _text;
+		}
+    	CASE (PLC_POOL_TMP_FB): {
+        	Pool_Pool_Temperature_Fb = _text;
+		}
+    	CASE (PLC_SPA_SP_FB): {
+        	Pool_Spa_Setpoint_Fb = _text;
+		}
+    	CASE (PLC_SPA_TMP_FB): {
+        	Pool_Spa_Temperature_Fb = _text;
+		}
+    	CASE (PLC_AMBIENT_FB): {
+        	Pool_Ambient_Temperature_Fb = _text;
+		}
+		CASE (PLC_AUX_COUNT): {
+        	Pool_AuxList_NumberOfItems = _state;
+		}
+		CASE (PLC_AUX_LABEL): {
+        	Pool_AuxList_Label[_state] = _text;
+		}
+        
+	}
+
+}
+
 CALLBACK FUNCTION TriggerSendShareListItemHandler(INTEGER position, STRING zoneName, INTEGER shareActive, INTEGER muteState, INTEGER volume) {
 	ShareList_Label[position+1] = zoneName;
 
@@ -1283,6 +1393,18 @@ CHANGE Security_Custom_04        { int.SecurityKeypadEvent(SKP_CUSTOM_04, Securi
 CHANGE Security_Custom_05        { int.SecurityKeypadEvent(SKP_CUSTOM_05, Security_Custom_05); }
 CHANGE Security_Custom_06        { int.SecurityKeypadEvent(SKP_CUSTOM_06, Security_Custom_06); }
 
+CHANGE Pool_Mode_Pool          { int.PoolEvent(PLC_MODE_POOL, Pool_Mode_Pool, ""); }
+CHANGE Pool_Mode_Spa           { int.PoolEvent(PLC_MODE_SPA, Pool_Mode_Spa, ""); }
+CHANGE Pool_Pool_Setpoint_Up   { int.PoolEvent(PLC_POOL_SP_UP, Pool_Pool_Setpoint_Up, ""); }
+CHANGE Pool_Pool_Setpoint_Down { int.PoolEvent(PLC_POOL_SP_DN, Pool_Pool_Setpoint_Down, ""); }
+CHANGE Pool_Pool_Heater_Toggle { int.PoolEvent(PLC_POOL_HT, Pool_Pool_Heater_Toggle, ""); }
+CHANGE Pool_Spa_Setpoint_Up    { int.PoolEvent(PLC_SPA_SP_UP, Pool_Spa_Setpoint_Up, ""); }
+CHANGE Pool_Spa_Setpoint_Down  { int.PoolEvent(PLC_SPA_SP_DN, Pool_Spa_Setpoint_Down, ""); }
+CHANGE Pool_Spa_Heater_Toggle  { int.PoolEvent(PLC_SPA_HT, Pool_Spa_Heater_Toggle, ""); }
+CHANGE Pool_Filter_Pump_Toggle { int.PoolEvent(PLC_FILTER, Pool_Filter_Pump_Toggle, ""); }
+CHANGE Pool_Aux_Toggle         { int.PoolEvent(PLC_AUX, Pool_Aux_Toggle[GETLASTMODIFIEDARRAYINDEX()], ITOA(GETLASTMODIFIEDARRAYINDEX())); }
+
+
 //=====// MAIN //=====//
 
 FUNCTION Main() {
@@ -1305,6 +1427,7 @@ FUNCTION Main() {
 	int.shadeListDisplaySize       = SHADELISTSIZE;
 	int.hvacListDisplaySize        = HVACLISTSIZE;
 	int.invertSourceLists          = InvertSourceLists;
+	int.enablePoolControl          = EnablePoolControls;
 
 	REGISTERDELEGATE(int, UpdateDigitalOutput, UpdateDigitalOutputHandler);
 	REGISTERDELEGATE(int, UpdateAnalogOutput, UpdateAnalogOutputHandler);
@@ -1337,6 +1460,7 @@ FUNCTION Main() {
 	REGISTERDELEGATE(int, SecurityKeypadFbUpdate, SecurityKeypadFbUpdateHandler);
 	REGISTERDELEGATE(int, SecurityKeypadTextFbUpdate, SecurityKeypadTextFbUpdateHandler);
     
+	REGISTERDELEGATE(int, PoolFbUpdate, PoolFbUpdateHandler);
 
 	IF(Core.RegisterInterface(InterfaceID, int) > 0) { 	
     	// Success!

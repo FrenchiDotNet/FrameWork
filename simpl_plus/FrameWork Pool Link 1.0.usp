@@ -1,0 +1,146 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+*/
+
+#SYMBOL_NAME "FrameWork Pool Link 1.0"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#PRINT_TO_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+#DEFINE_CONSTANT PLC_MODE_POOL    1
+#DEFINE_CONSTANT PLC_MODE_SPA     2
+#DEFINE_CONSTANT PLC_POOL_SP_UP   3
+#DEFINE_CONSTANT PLC_POOL_SP_DN   4
+#DEFINE_CONSTANT PLC_POOL_HT      5
+#DEFINE_CONSTANT PLC_SPA_SP_UP    6
+#DEFINE_CONSTANT PLC_SPA_SP_DN    7
+#DEFINE_CONSTANT PLC_SPA_HT       8
+#DEFINE_CONSTANT PLC_FILTER       9
+#DEFINE_CONSTANT PLC_AUX          10
+#DEFINE_CONSTANT PLC_MODE_POOL_FB 11
+#DEFINE_CONSTANT PLC_MODE_SPA_FB  12
+#DEFINE_CONSTANT PLC_POOL_HT_FB   13
+#DEFINE_CONSTANT PLC_SPA_HT_FB    14
+#DEFINE_CONSTANT PLC_FILTER_FB    15
+#DEFINE_CONSTANT PLC_AUX_FB       16
+#DEFINE_CONSTANT PLC_POOL_SP_FB   17
+#DEFINE_CONSTANT PLC_POOL_TMP_FB  18
+#DEFINE_CONSTANT PLC_SPA_SP_FB    19
+#DEFINE_CONSTANT PLC_SPA_TMP_FB   20
+#DEFINE_CONSTANT PLC_AMBIENT_FB   21
+
+//=====// I/O //=====//
+
+Pool p;
+
+//=====// VARIABLES //=====//
+
+DIGITAL_INPUT  Mode_Pool_Fb,
+			   Mode_Spa_Fb,
+			   Pool_Heater_Fb,
+			   Spa_Heater_Fb,
+			   Filter_Pump_Fb,
+			   Aux_Fb[12,12];
+
+STRING_INPUT   Pool_Setpoint_Fb[6],
+			   Pool_Temperature_Fb[6],
+			   Spa_Setpoint_Fb[6],
+			   Spa_Temperature_Fb[6],
+			   Ambient_Temperature_Fb[6];
+
+DIGITAL_OUTPUT Mode_Pool,
+			   Mode_Spa,
+			   Pool_Setpoint_Up,
+			   Pool_Setpoint_Down,
+			   Pool_Heater_Toggle,
+			   Spa_Setpoint_Up,
+			   Spa_Setpoint_Down,
+			   Spa_Heater_Toggle,
+			   Filter_Pump_Toggle,
+			   Aux[12,12];
+
+STRING_PARAMETER _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				 _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				 _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				 _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				 Aux_Label[12][16];
+
+//=====// FUNCTIONS //=====//
+
+CALLBACK FUNCTION TriggerSendCommandHandler (INTEGER _cmd, INTEGER _state, STRING _text) {
+
+	SWITCH (_cmd) {
+
+		CASE (PLC_MODE_POOL): {
+        	Mode_Pool = _state;
+		}
+		CASE (PLC_MODE_SPA): {
+        	Mode_Spa = _state;
+		}
+		CASE (PLC_POOL_SP_UP): {
+        	Pool_Setpoint_Up = _state;
+		}
+		CASE (PLC_POOL_SP_DN): {
+        	Pool_Setpoint_Down = _state;
+		}
+		CASE (PLC_POOL_HT): {
+        	Pool_Heater_Toggle = _state;
+		}
+		CASE (PLC_SPA_SP_UP): {
+        	Spa_Setpoint_Up = _state;
+		}
+		CASE (PLC_SPA_SP_DN): {
+        	Spa_Setpoint_Down = _state;
+		}
+		CASE (PLC_SPA_HT): {
+        	Spa_Heater_Toggle = _state;
+		}
+		CASE (PLC_FILTER): {
+        	Filter_Pump_Toggle = _state;
+		}
+		CASE (PLC_AUX): {
+        	Aux[ATOI(_text)] = _state;
+		}
+
+	}
+
+}
+
+//=====// EVENTS //=====//
+
+CHANGE Mode_Pool_Fb   { p.FeedbackEvent(PLC_MODE_POOL_FB, Mode_Pool_Fb, ""); }
+CHANGE Mode_Spa_Fb    { p.FeedbackEvent(PLC_MODE_SPA_FB, Mode_Spa_Fb, ""); }
+CHANGE Pool_Heater_Fb { p.FeedbackEvent(PLC_POOL_HT_FB, Pool_Heater_Fb, ""); }
+CHANGE Spa_Heater_Fb  { p.FeedbackEvent(PLC_SPA_HT_FB, Spa_Heater_Fb, ""); }
+CHANGE Filter_Pump_Fb { p.FeedbackEvent(PLC_FILTER_FB, Filter_Pump_Fb, ""); }
+CHANGE Aux_Fb         { p.FeedbackEvent(PLC_AUX_FB, Aux_Fb[GETLASTMODIFIEDARRAYINDEX()], ITOA(GETLASTMODIFIEDARRAYINDEX()-1)); }
+
+CHANGE Pool_Setpoint_Fb       { p.FeedbackEvent(PLC_POOL_SP_FB, 0, Pool_Setpoint_Fb); }
+CHANGE Pool_Temperature_Fb    { p.FeedbackEvent(PLC_POOL_TMP_FB, 0, Pool_Temperature_Fb); }
+CHANGE Spa_Setpoint_Fb        { p.FeedbackEvent(PLC_SPA_SP_FB, 0, Spa_Setpoint_Fb); }
+CHANGE Spa_Temperature_Fb     { p.FeedbackEvent(PLC_SPA_TMP_FB, 0, Spa_Temperature_Fb); }
+CHANGE Ambient_Temperature_Fb { p.FeedbackEvent(PLC_AMBIENT_FB, 0, Ambient_Temperature_Fb); }
+
+//=====// MAIN //=====//
+
+FUNCTION Main () {
+
+	INTEGER i;
+
+	WAITFORINITIALIZATIONCOMPLETE();
+
+	IF (Core.RegisterPool(p) > 0) {
+     
+		REGISTERDELEGATE(p, TriggerSendCommand, TriggerSendCommandHandler);
+
+		FOR(i = 1 TO 12) {         
+			p.setAuxLabel(i-1, Aux_Label[i]);
+		}
+
+	}
+
+}
+
