@@ -8,6 +8,8 @@ namespace FrameWork {
 
         public PoolMode currentMode;
 
+        public ushort systemType; // 1 = Pool Only, 2 = Spa Only, 3 = Pool + Spa
+
         public float currentPoolSetpoint;
         public float currentPoolTemp;
         public float currentSpaSetpoint;
@@ -45,6 +47,8 @@ namespace FrameWork {
             auxLabels        = new string[12];
 
             currentMode = PoolMode.Unknown;
+
+            systemType  = 0;
 
         }
 
@@ -108,6 +112,9 @@ namespace FrameWork {
                 case PoolCommand.Ambient_Temp_Fb:
                     currentAmbientTemp = float.Parse(_text); ;
                     break;
+                case PoolCommand.System_Type:
+                    systemType = _state;
+                    break;
 
             }
 
@@ -162,7 +169,8 @@ namespace FrameWork {
         Spa_Temp_Fb,
         Ambient_Temp_Fb,
         Aux_Count_Fb,
-        Aux_Label_Fb
+        Aux_Label_Fb,
+        System_Type
     }
 
 }

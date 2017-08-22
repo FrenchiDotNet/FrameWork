@@ -1,16 +1,22 @@
 /*
 Dealer Name: Ask The Advisors
 Programmer: Ryan French
+
+--- CHANGELOG ---
+
+8/14/17 - 1.2i - Added digital join to show/hide Lighting button.
+			   - Added enable/disable joins for all subsystem controls
+
 */
 
-#SYMBOL_NAME "FrameWork Interface Link 1.2h"
+#SYMBOL_NAME "FrameWork Interface Link 1.2k"
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
 #ENABLE_TRACE
 #PRINT_TO_TRACE
 #USER_SIMPLSHARP_LIBRARY "FrameWork"
 
-#DEFINE_CONSTANT TARGET_SSHARP_VERSION "1.2h"
+#DEFINE_CONSTANT TARGET_SSHARP_VERSION "1.2k"
 
 #DEFINE_CONSTANT TRUE 1
 #DEFINE_CONSTANT FALSE 0
@@ -209,6 +215,7 @@ Programmer: Ryan French
 #DEFINE_CONSTANT PLC_AMBIENT_FB   21
 #DEFINE_CONSTANT PLC_AUX_COUNT    22
 #DEFINE_CONSTANT PLC_AUX_LABEL    23
+#DEFINE_CONSTANT PLC_TYPE         24
 
 
 //=====// I/O //=====//
@@ -217,6 +224,11 @@ DIGITAL_INPUT _SKIP_,
 			  _SKIP_,
 			  _SKIP_,
 			  _SKIP_, 
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
 			  _SKIP_,
 			  _SKIP_,
 			  _SKIP_,
@@ -303,9 +315,15 @@ DIGITAL_OUTPUT _SKIP_,
 			   _SKIP_,
 			   _SKIP_,
 			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
 			   Show_ListenList_Button,
 			   Show_WatchList_Button,
 			   Show_ShareList_Button,
+			   Show_LightingControl_Button,
 			   Show_Shades_Button,
 			   Show_HVAC_Button,
 			   Show_Security_Button,
@@ -329,6 +347,9 @@ DIGITAL_OUTPUT _SKIP_,
 			   Security_Custom_04_Fb,
 			   Security_Custom_05_Fb,
 			   Security_Custom_06_Fb,
+			   Pool_Type_PoolOnly,
+			   Pool_Type_SpaOnly,
+			   Pool_Type_PoolSpa,
 			   Pool_Mode_Pool_Fb,
 			   Pool_Mode_Spa_Fb,
 			   Pool_Pool_Heater_Fb,
@@ -435,6 +456,10 @@ STRING_OUTPUT ZoneList_Label[ZONELISTSIZE],
 INTEGER_PARAMETER InterfaceID, 
 				  DefaultZoneID,
 				  InvertSourceLists,
+				  EnableLightingControls,
+				  EnableShadeControls,
+				  EnableHVACControls,
+				  EnableSecurityControls,
 				  EnablePoolControls;
 
 STRING_PARAMETER  InterfaceName[24], 
@@ -442,7 +467,7 @@ STRING_PARAMETER  InterfaceName[24],
 				  ShareZones[192],
 				  SecurityKeypads[24];
 
-#BEGIN_PARAMETER_PROPERTIES InvertSourceLists
+#BEGIN_PARAMETER_PROPERTIES InvertSourceLists, EnableLightingControls, EnableShadeControls, EnableHVACControls, EnableSecurityControls
 	PROPLIST = { 0d,"False" },{ 1d,"True" };
 #END_PARAMETER_PROPERTIES
 
@@ -489,6 +514,9 @@ CALLBACK FUNCTION UpdateDigitalOutputHandler(INTEGER _join, INTEGER _state) {
 		}
 		CASE(DJ_POOLCONTROLAVAILABLE): {
         	Show_PoolControl_Button = _state;
+		}
+		CASE(DJ_LIGHTINGLISTAVAILABLE): {
+        	Show_LightingControl_Button = _state;
 		}
 		CASE(DJ_MUTEFB): {
             Zone_Mute_Fb = _state;
@@ -1089,6 +1117,14 @@ CALLBACK FUNCTION PoolFbUpdateHandler (INTEGER _cmd, INTEGER _state, STRING _tex
 		CASE (PLC_AUX_LABEL): {
         	Pool_AuxList_Label[_state] = _text;
 		}
+		CASE (PLC_TYPE): {
+        	IF(_state = 1)
+				Pool_Type_PoolOnly = 1;
+			IF(_state = 2)
+				Pool_Type_SpaOnly  = 2;
+			IF(_state = 3)
+				Pool_Type_PoolSpa  = 3;
+		}
         
 	}
 
@@ -1428,6 +1464,10 @@ FUNCTION Main() {
 	int.hvacListDisplaySize        = HVACLISTSIZE;
 	int.invertSourceLists          = InvertSourceLists;
 	int.enablePoolControl          = EnablePoolControls;
+	int.enableLightingControl      = EnableLightingControls;
+	int.enableShadeControl         = EnableShadeControls;
+	int.enableHVACControl          = EnableHVACControls;
+	int.enableSecurityControl      = EnableSecurityControls;
 
 	REGISTERDELEGATE(int, UpdateDigitalOutput, UpdateDigitalOutputHandler);
 	REGISTERDELEGATE(int, UpdateAnalogOutput, UpdateAnalogOutputHandler);

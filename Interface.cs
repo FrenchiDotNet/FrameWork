@@ -9,7 +9,7 @@ namespace FrameWork {
     /**
      * Class:       Interface
      * @author:     Ryan French
-     * @version:    1.2e
+     * @version:    1.2k
      * Description: ...
      * 
      * CHANGELOG:
@@ -21,7 +21,7 @@ namespace FrameWork {
 
         //===================// Members //===================//
 
-        public string version = "1.2h";
+        public string version = "1.2k";
 
         public string name;
         public ushort id;
@@ -38,8 +38,23 @@ namespace FrameWork {
         internal List<Shade> shadeList;           // <- No longer being inverted for tablets, remove these
         internal List<SecurityKeypad> securityKeypadList;
 
+        internal SecurityKeypad currentSecurityKeypad;
+
         internal bool _invertSourceLists;
+
+        internal bool _enableLightingControl;
+        internal bool _enableShadeControl;
+        internal bool _enableHVACControl;
+        internal bool _enableSecurityControl;
         internal bool _enablePoolControl;
+
+        public ushort invertSourceLists { set { _invertSourceLists = value == 1 ? true : false; } get { return (ushort)(_invertSourceLists ? 1 : 0); } }
+
+        public ushort enableLightingControl { set { _enableLightingControl = value == 1 ? true : false; } get { return (ushort)(_enableLightingControl ? 1 : 0); } }
+        public ushort enableShadeControl    { set { _enableShadeControl = value == 1 ? true : false; } get { return (ushort)(_enableShadeControl ? 1 : 0); } }
+        public ushort enableHVACControl     { set { _enableHVACControl = value == 1 ? true : false; } get { return (ushort)(_enableHVACControl ? 1 : 0); } }
+        public ushort enableSecurityControl { set { _enableSecurityControl = value == 1 ? true : false; } get { return (ushort)(_enableSecurityControl ? 1 : 0); } }
+        public ushort enablePoolControl     { set { _enablePoolControl = value == 1 ? true : false; } get { return (ushort)(_enablePoolControl ? 1 : 0); } }
 
         public ushort sourceListDisplaySize;
         public ushort sourceListMaxSize;
@@ -47,13 +62,9 @@ namespace FrameWork {
         public ushort lightingPresetsDisplaySize;
         public ushort shadeListDisplaySize;
         public ushort hvacListDisplaySize;
-        public ushort invertSourceLists { set { _invertSourceLists = value == 1 ? true : false; } get { return (ushort)(_invertSourceLists ? 1 : 0); } }
-        public ushort enablePoolControl { set { _enablePoolControl = value == 1 ? true : false; } get { return (ushort)(_enablePoolControl ? 1 : 0); } }
 
         public Zone currentZone;
         public Source currentSource;
-
-        internal SecurityKeypad currentSecurityKeypad;
 
         public bool hasSecurityKeypad { get { return securityKeypadList.Count > 0 ? true : false; } }
 
@@ -210,31 +221,31 @@ namespace FrameWork {
                         this.currentZone.lift.LiftCommandFb -= this.LiftCommandFbHandler;
 
                     // Unsubscribe from current Lights list
-                    if (this.currentZone.hasLights) {
+                    if (this.currentZone.hasLights && _enableLightingControl) {
 
                         if (this.currentZone.lightingLoads.Count > 0) {
                             for (int j = 0; j < currentZone.lightingLoads.Count; j++) {
-                                currentZone.lightingLoads[j].UpdateFeedback -= this.LightingLoadFbHandler;
+                                currentZone.lightingLoads[j].unsubscribeFromEvents(this);
                             }
                         }
 
                         if (this.currentZone.lightingPresets.Count > 0) {
                             for (int j = 0; j < currentZone.lightingPresets.Count; j++) {
-                                currentZone.lightingPresets[j].UpdateFeedback -= this.LightingLoadFbHandler;
+                                currentZone.lightingPresets[j].unsubscribeFromEvents(this);
                             }
                         }
 
                     }
 
                     // Unsubscribe from current Shades list
-                    if (this.currentZone.hasShades) {
+                    if (this.currentZone.hasShades && _enableShadeControl) {
                         for (int j = 0; j < currentZone.shades.Count; j++) {
-                            currentZone.shades[j].UpdateShadeFb -= this.ShadeFbHandler;
+                            currentZone.shades[j].unsubscribeFromEvents(this);
                         }
                     }
 
                     // Unsubscribe from current HVAC list
-                    if (this.currentZone.hasHVAC) {
+                    if (this.currentZone.hasHVAC && _enableHVACControl) {
                         for (int j = 0; j < currentZone.hvacs.Count; j++) {
                             currentZone.hvacs[j].UpdateEvent -= this.HVACFbHandler;
                         }
@@ -263,33 +274,33 @@ namespace FrameWork {
                 this.currentZone.UpdateDisplayAvailableEvent  += new DelegateUshort(this.ZoneUpdateDisplayAvailableHandler);
 
                 // Subscribe to new lights list
-                if (currentZone.hasLights) {
+                if (currentZone.hasLights && _enableLightingControl) {
 
                     // Loads
                     if (currentZone.lightingLoads.Count > 0) {
                         for (int j = 0; j < currentZone.lightingLoads.Count; j++) {
-                            currentZone.lightingLoads[j].UpdateFeedback += this.LightingLoadFbHandler;
+                            currentZone.lightingLoads[j].subscribeToEvents(this);
                         }
                     }
 
                     // Presets
                     if (currentZone.lightingPresets.Count > 0) {
                         for (int j = 0; j < currentZone.lightingPresets.Count; j++) {
-                            currentZone.lightingPresets[j].UpdateFeedback += this.LightingLoadFbHandler;
+                            currentZone.lightingPresets[j].subscribeToEvents(this);
                         }
                     }
 
                 }
 
                 // Subscribe to new Shades list
-                if (currentZone.hasShades) {
+                if (currentZone.hasShades && _enableShadeControl) {
                     for (int j = 0; j < currentZone.shades.Count; j++) {
-                        currentZone.shades[j].UpdateShadeFb += this.ShadeFbHandler;
+                        currentZone.shades[j].subscribeToEvents(this);
                     }
                 }
 
                 // Subscribe to new HVAC list
-                if (currentZone.hasHVAC) {
+                if (currentZone.hasHVAC && _enableHVACControl) {
                     for (int j = 0; j < currentZone.hvacs.Count; j++) {
                         currentZone.hvacs[j].UpdateEvent += this.HVACFbHandler;
                     }
@@ -351,6 +362,10 @@ namespace FrameWork {
 
                 if (count > 0)
                     this.PoolFbUpdate((ushort)PoolCommand.Aux_Count_Fb, (ushort)count, "");
+
+                this.PoolFbUpdate((ushort)PoolCommand.System_Type, (ushort)Core.pool.systemType, "");
+                this.PoolFbUpdate((ushort)PoolCommand.ModeSelect_Pool_Fb, (ushort)(Core.pool.currentMode == PoolMode.Pool ? 1 : 0), "");
+                this.PoolFbUpdate((ushort)PoolCommand.ModeSelect_Spa_Fb, (ushort)(Core.pool.currentMode == PoolMode.Spa ? 1 : 0), "");
 
             }
 
@@ -738,6 +753,9 @@ namespace FrameWork {
          */
         internal void BuildLightsList() {
 
+            if (!_enableLightingControl)
+                return;
+
             // Send display data to S+
             // Loads
             if (LightingLoadListUpdate != null) {
@@ -789,6 +807,9 @@ namespace FrameWork {
             TriggerUpdateAnalogOutput((ushort)AnalogJoins.LightingList_NumberOfLoads, (ushort)currentZone.lightingLoads.Count);
             TriggerUpdateAnalogOutput((ushort)AnalogJoins.LightingList_NumberOfPresets, (ushort)currentZone.lightingPresets.Count);
 
+            // Show or Hide UI Lighting Button
+            TriggerUpdateDigitalOutput((ushort)DigitalJoins.LightingListAvailable, (ushort)(currentZone.hasLights ? 1 : 0));
+
         }
 
         /**
@@ -798,6 +819,9 @@ namespace FrameWork {
          * Description: Parse string of comma-separated Shades into a List<Shades>
          */
         internal void BuildShadesList() {
+
+            if (!_enableShadeControl)
+                return;
 
             // Send display data to S+
             if (ShadeListUpdate != null) {
@@ -836,6 +860,9 @@ namespace FrameWork {
          * Description: Parse string of comma-separated HVAC Zones into a List<HVAC>
          */
         internal void BuildHVACList() {
+
+            if (!_enableHVACControl)
+                return;
 
             HVAC unit;
 
@@ -904,6 +931,9 @@ namespace FrameWork {
          */
         internal void ParseSecurityKeypads () {
 
+            if (!_enableSecurityControl)
+                return;
+
             // Request list from S+
             string lTmp = SecurityKeypadListRequest().ToString();
 
@@ -934,7 +964,7 @@ namespace FrameWork {
          */
         public void SetCurrentSecurityKeypad (ushort _id) {
 
-            if (!Core.SecurityKeypads.ContainsKey(_id)) {
+            if (!_enableSecurityControl || !Core.SecurityKeypads.ContainsKey(_id)) {
                 return;
             }
 
@@ -1143,22 +1173,6 @@ namespace FrameWork {
 
             TriggerUpdateStringOutput((ushort)SerialJoins.ListenListFb, aList);
             TriggerUpdateStringOutput((ushort)SerialJoins.WatchListFb, vList);
-        }
-
-        /**
-         * Method: UpdateLightingList
-         * Access: internal
-         * @return: void
-         * Description: 
-         */
-        internal void UpdateLightingList() {
-
-            if (this.currentZone.hasLights) {
-                // Enable Lighting List button
-            } else {
-                // Disable Lighting List button
-            }
-
         }
 
         /**

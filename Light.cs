@@ -29,8 +29,8 @@ namespace FrameWork {
         public DelegateUshort  TriggerSendLevel { get; set; }
 
         // Events for status updates on subscribed Interfaces
-        public event DelegateUshort  UpdateLevelEvent;
-        public event DelegateUshort2 UpdateStatusEvent; // ushort1 = LightCommand, ushort2 = feedback state
+        //public event DelegateUshort  UpdateLevelEvent;
+        //public event DelegateUshort2 UpdateStatusEvent; // ushort1 = LightCommand, ushort2 = feedback state
         
         public delegate void DelegateLightFbUpdate(ushort id, LightCommand action, ushort state);
         public event DelegateLightFbUpdate UpdateFeedback;
@@ -83,8 +83,8 @@ namespace FrameWork {
 
             this.level = _level;
 
-            if (this.UpdateLevelEvent != null)
-                this.UpdateLevelEvent (_level);
+            //if (this.UpdateLevelEvent != null)
+            //    this.UpdateLevelEvent (_level);
             if (this.UpdateFeedback != null)
                 this.UpdateFeedback(this.id, LightCommand.Level, _level);
 
@@ -114,7 +114,7 @@ namespace FrameWork {
 
             this.isOn = _isOn;
 
-            if (this.UpdateStatusEvent != null) {
+            /*if (this.UpdateStatusEvent != null) {
                 if (this.isOn) {
                     this.UpdateStatusEvent((ushort)LightCommand.On, 1);
                     this.UpdateStatusEvent((ushort)LightCommand.Off, 0);
@@ -122,7 +122,7 @@ namespace FrameWork {
                     this.UpdateStatusEvent((ushort)LightCommand.On, 0);
                     this.UpdateStatusEvent((ushort)LightCommand.Off, 1);
                 }
-            }
+            }*/
 
             if (this.UpdateFeedback != null) {
                 if (this.isOn) {
@@ -166,6 +166,34 @@ namespace FrameWork {
 
         }
 
+        /**
+        * Method: subscribeToEvents
+        * Access: public
+        * @return: void
+        * Description: ...
+        */
+        public void subscribeToEvents(Interface _int) {
+
+            this.UpdateFeedback += _int.LightingLoadFbHandler;
+
+            sendCommand(LightCommand.InUseState, (ushort)(UpdateFeedback != null ? 1 : 0));
+
+        }
+
+        /**
+        * Method: unsubscribeFromEvents
+        * Access: public
+        * @return: void
+        * Description: ...
+        */
+        public void unsubscribeFromEvents(Interface _int) {
+
+            this.UpdateFeedback -= _int.LightingLoadFbHandler;
+
+            sendCommand(LightCommand.InUseState, (ushort)(UpdateFeedback != null ? 1 : 0));
+
+        }
+
         //===================// Event Handlers //===================//
 
     } // End Light class
@@ -181,7 +209,8 @@ namespace FrameWork {
         Speed1,
         Speed2,
         Speed3,
-        Level
+        Level,
+        InUseState
     }
 
     public enum LightingControlType {

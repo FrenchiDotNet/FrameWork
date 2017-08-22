@@ -101,6 +101,34 @@ namespace FrameWork {
 
         }
 
+        /**
+        * Method: subscribeToEvents
+        * Access: public
+        * @return: void
+        * Description: ...
+        */
+        public void subscribeToEvents(Interface _int) {
+
+            this.UpdateShadeFb += _int.ShadeFbHandler;
+
+            SendShadeCommand(ShadeCommand.InUseState, (ushort)(UpdateShadeFb != null ? 1 : 0));
+
+        }
+
+        /**
+        * Method: unsubscribeFromEvents
+        * Access: public
+        * @return: void
+        * Description: ...
+        */
+        public void unsubscribeFromEvents(Interface _int) {
+
+            this.UpdateShadeFb -= _int.ShadeFbHandler;
+
+            SendShadeCommand(ShadeCommand.InUseState, (ushort)(UpdateShadeFb != null ? 1 : 0));
+
+        }
+
         //===================// Event Handlers //===================//
 
     } // End Shade Class
@@ -123,7 +151,8 @@ namespace FrameWork {
         Up_Fb = 11,
         Down_Fb,
         Stop_Fb,
-        Moving_Fb
+        Moving_Fb,
+        InUseState
     }
 
 }

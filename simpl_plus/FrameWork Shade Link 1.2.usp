@@ -3,7 +3,7 @@ Dealer Name: Ask The Advisors
 Programmer: Ryan French
 */
 
-#SYMBOL_NAME "FrameWork Shade Link 1.0"
+#SYMBOL_NAME "FrameWork Shade Link 1.2"
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
 #ENABLE_TRACE
@@ -16,10 +16,11 @@ Programmer: Ryan French
 #DEFINE_CONSTANT ACTION_STOP   4
 #DEFINE_CONSTANT ACTION_VIEW   5
 
-#DEFINE_CONSTANT FB_UP     11
-#DEFINE_CONSTANT FB_DOWN   12
-#DEFINE_CONSTANT FB_STOP   13
-#DEFINE_CONSTANT FB_MOVING 14
+#DEFINE_CONSTANT FB_UP      11
+#DEFINE_CONSTANT FB_DOWN    12
+#DEFINE_CONSTANT FB_STOP    13
+#DEFINE_CONSTANT FB_MOVING  14
+#DEFINE_CONSTANT INUSESTATE 15
 
 #DEFINE_CONSTANT TYPE_TOGGLE         1
 #DEFINE_CONSTANT TYPE_UPDOWN         2
@@ -43,7 +44,8 @@ DIGITAL_OUTPUT _SKIP_,
 			   Shade_Down,
 			   Shade_Toggle,
 			   Shade_Stop,
-			   Shade_View;
+			   Shade_View,
+			   InUse;
 
 INTEGER_PARAMETER Shade_ID,
 				  Shade_ControlType;
@@ -74,6 +76,9 @@ CALLBACK FUNCTION TriggerShadeCommandHandler (INTEGER _action, INTEGER _state) {
 		}
 		CASE (ACTION_VIEW): {
         	Shade_View = _state;
+		}
+		CASE (INUSESTATE): {
+        	InUse = _state;
 		}
 
 	}

@@ -516,7 +516,7 @@ namespace FrameWork {
                                 msg = "Display Command Sent: " + args[1] + "\r\n"; ;
                             }
                         }
-                        catch (ArgumentException e) {
+                        catch (ArgumentException) {
                             msg = String.Format("Unknown Display Command {0}\r\n", args[1]);
                         }
 
