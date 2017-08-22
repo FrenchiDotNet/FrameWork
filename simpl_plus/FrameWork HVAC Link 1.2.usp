@@ -3,7 +3,7 @@ Dealer Name: Ask The Advisors
 Programmer: Ryan French
 */
 
-#SYMBOL_NAME "FrameWork HVAC Link 1.0"
+#SYMBOL_NAME "FrameWork HVAC Link 1.2"
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
 #ENABLE_TRACE
@@ -36,6 +36,7 @@ Programmer: Ryan French
 #DEFINE_CONSTANT FANCALL_FB  25
 #DEFINE_CONSTANT T_SETPOINT  26
 #DEFINE_CONSTANT T_AMBIENT   27
+#DEFINE_CONSTANT INUSESTATE  28
 
 #DEFINE_CONSTANT TYPE_AUTO         1
 #DEFINE_CONSTANT TYPE_HEATCOOL     2
@@ -75,7 +76,8 @@ DIGITAL_OUTPUT _SKIP_,
 			   FanSpeed_Low,
 			   FanSpeed_Medium,
 			   FanSpeed_High,
-			   FanSpeed_Max;
+			   FanSpeed_Max,
+			   InUse;
 
 ANALOG_INPUT   Setpoint_Temp,
 			   Ambient_Temp;
@@ -132,6 +134,9 @@ CALLBACK FUNCTION TriggerSendCommandHandler (INTEGER _action, INTEGER _state) {
 		}
 		CASE(FS_MAX): {
             FanSpeed_Max    = _state;
+		}
+		CASE(INUSESTATE): {
+        	InUse = _state;
 		}
 
 	}

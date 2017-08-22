@@ -247,7 +247,7 @@ namespace FrameWork {
                     // Unsubscribe from current HVAC list
                     if (this.currentZone.hasHVAC && _enableHVACControl) {
                         for (int j = 0; j < currentZone.hvacs.Count; j++) {
-                            currentZone.hvacs[j].UpdateEvent -= this.HVACFbHandler;
+                            currentZone.hvacs[j].unsubscribeFromEvents(this);
                         }
                     }
 
@@ -302,7 +302,7 @@ namespace FrameWork {
                 // Subscribe to new HVAC list
                 if (currentZone.hasHVAC && _enableHVACControl) {
                     for (int j = 0; j < currentZone.hvacs.Count; j++) {
-                        currentZone.hvacs[j].UpdateEvent += this.HVACFbHandler;
+                        currentZone.hvacs[j].subscribeToEvents(this);
                     }
                 }
 
@@ -1648,7 +1648,25 @@ namespace FrameWork {
         }
     }
 
+    public enum InterfaceType {
+
+        Unknown,
+        Type_Keypad,
+        Type_HR150,
+        Type_TSR302,
+        Type_iPad,
+        Type_iPhone,
+        Type_TSW,
+        Type_TSD,
+        Type_3SMD,
+        Type_4SM,
+        Type_TST,
+        Type_XPanel
+
+    }
+
     public enum DigitalJoins {
+
         Popup_Request_SysMenu = 1,
         Popup_Request_RoomList,
         Popup_Request_SourceList_Audio,
@@ -1666,9 +1684,11 @@ namespace FrameWork {
         HVACListAvailable,
         SecurityKeypadAvailable,
         PoolControlAvailable
+
     }
 
     public enum AnalogJoins {
+
         CurrentZone = 1,
         CurrentSource,
         ZoneList_NumberOfItems,
@@ -1683,12 +1703,15 @@ namespace FrameWork {
         ShadeList_NumberOfItems = 35,
         HVACList_NumberOfItems,
         SecurityKeypadList_NumberOfItems
+
     }
 
     public enum SerialJoins {
+
         CurrentZone = 1,
         CurrentSource,
         ListenListFb,
         WatchListFb
+
     }
 }

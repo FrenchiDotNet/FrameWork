@@ -156,6 +156,34 @@ namespace FrameWork {
 
         }
 
+        /**
+        * Method: subscribeToEvents
+        * Access: public
+        * @return: void
+        * Description: ...
+        */
+        public void subscribeToEvents(Interface _int) {
+
+            this.UpdateEvent += _int.HVACFbHandler;
+
+            SendHVACCommand(HVACCommand.InUseState, (ushort)(UpdateEvent != null ? 1 : 0));
+
+        }
+
+        /**
+        * Method: unsubscribeFromEvents
+        * Access: public
+        * @return: void
+        * Description: ...
+        */
+        public void unsubscribeFromEvents(Interface _int) {
+
+            this.UpdateEvent -= _int.HVACFbHandler;
+
+            SendHVACCommand(HVACCommand.InUseState, (ushort)(UpdateEvent != null ? 1 : 0));
+
+        }
+
         //===================// Event Handlers //===================//
 
 
@@ -195,7 +223,8 @@ namespace FrameWork {
         HeatCall_Fb,
         FanCall_Fb,
         TempSetpoint,
-        TempAmbient
+        TempAmbient,
+        InUseState
     }
 
 }
