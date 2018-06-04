@@ -9,7 +9,7 @@ namespace FrameWork {
     /**
      * Class:       Source
      * @author:     Ryan French
-     * @version:    1.1
+     * @version:    1.3a
      * Description: ...
      */
     public class Source {

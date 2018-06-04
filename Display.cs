@@ -9,7 +9,7 @@ namespace FrameWork {
     /**
      * Class:       Display
      * @author:     Ryan French
-     * @version:    1.1
+     * @version:    1.3a
      * Description: Defines control methods and variables for video displays. Interfaces with S+/SIMPL via event triggers to send commands to display hardware and
      *              pass device info to Interfaces for end-user interaction.
      */

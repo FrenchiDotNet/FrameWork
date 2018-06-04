@@ -1,0 +1,175 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+*/                                                      
+#SYMBOL_NAME "FrameWork Remote Activity List Driver 1.3"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+
+#DEFINE_CONSTANT ICONBLANK    169
+#DEFINE_CONSTANT ICONAUDIO    1
+#DEFINE_CONSTANT ICONVIDEO    83
+#DEFINE_CONSTANT ICONLIGHTING 17
+#DEFINE_CONSTANT ICONSHADES   79
+#DEFINE_CONSTANT ICONHVAC     6
+#DEFINE_CONSTANT ICONSECURITY 81
+#DEFINE_CONSTANT ICONSETTINGS 55
+#DEFINE_CONSTANT ICONPOOL     77
+
+//=====// I/O //=====//
+
+DIGITAL_INPUT Audio_Sources_Available,
+			  Video_Sources_Available,
+			  Lighting_Available,
+			  Shades_Available,
+			  HVAC_Available,
+			  Security_Available,
+			  Settings_Available,
+			  Pool_Available,
+			  _SKIP_,
+              Update,
+			  _SKIP_,
+			  List_Button[12];
+
+DIGITAL_OUTPUT Show_Audio_Page,
+			   Show_Video_Page,
+			   Show_Lighting_Page,
+			   Show_Shades_Page,
+			   Show_HVAC_Page,
+			   Show_Security_Page,
+			   Show_Settings_Page,
+			   Show_Pool_Page;
+
+ANALOG_OUTPUT _SKIP_,
+			  NumberOfItems,
+			  _SKIP_,
+			  List_Icon[12];
+
+STRING_OUTPUT _SKIP_,
+			  List_Label[12];
+
+//=====// VARIABLES //=====//
+
+INTEGER ListSize;
+
+STRING ButtonActions[12][12];
+
+//=====// FUNCTIONS //=====//
+
+FUNCTION RebuildList () {
+
+	// Count Number of Active Inputs
+	INTEGER tempSize;
+	INTEGER i;
+	tempSize = 0;
+
+	IF(Audio_Sources_Available) {
+		tempSize = tempSize + 1;
+		List_Icon[tempSize] = ICONAUDIO;
+		List_Label[tempSize] = "Listen";
+		ButtonActions[tempSize] = "Listen";
+	}
+	IF(Video_Sources_Available) {
+		tempSize = tempSize + 1;
+		List_Icon[tempSize] = ICONVIDEO;
+		List_Label[tempSize] = "Watch";
+		ButtonActions[tempSize] = "Watch";
+	}
+	IF(Lighting_Available) {
+		tempSize = tempSize + 1;
+		List_Icon[tempSize] = ICONLIGHTING;
+		List_Label[tempSize] = "Lighting";
+		ButtonActions[tempSize] = "Lighting";
+	}
+	IF(Shades_Available) {
+		tempSize = tempSize + 1;
+		List_Icon[tempSize] = ICONSHADES;
+		List_Label[tempSize] = "Shades";
+		ButtonActions[tempSize] = "Shades";
+	}
+	IF(HVAC_Available) {
+		tempSize = tempSize + 1;
+		List_Icon[tempSize] = ICONHVAC;
+		List_Label[tempSize] = "Climate";
+		ButtonActions[tempSize] = "Climate";
+	}
+	IF(Security_Available) {
+		tempSize = tempSize + 1;
+		List_Icon[tempSize] = ICONSECURITY;
+		List_Label[tempSize] = "Security";
+		ButtonActions[tempSize] = "Security";
+	}
+	IF(Pool_Available) {
+		tempSize = tempSize + 1;
+		List_Icon[tempSize] = ICONPOOL;
+		List_Label[tempSize] = "Pool";
+		ButtonActions[tempSize] = "Pool";
+	}
+	IF(Settings_Available) {
+		tempSize = tempSize + 1;
+		List_Icon[tempSize] = ICONSETTINGS;
+		List_Label[tempSize] = "Settings";
+		ButtonActions[tempSize] = "Settings";
+	}
+    
+	// Send Final List Size
+	listSize = tempSize;
+    NumberOfItems = tempSize;
+	
+	// Clear Remaining Buttons
+	FOR (i = (tempSize+1) TO 12) {
+		List_Icon[i]  = ICONBLANK;
+		List_Label[i] = "";
+		ButtonActions[i] = "";		
+	}
+
+}
+
+FUNCTION GetButtonAction (INTEGER _pos) {
+
+	STRING action[12];
+	action = ButtonActions[_pos];
+
+	IF (action = "")
+		RETURN;
+	ELSE IF (action = "Listen")
+		PULSE (5, Show_Audio_Page);
+	ELSE IF (action = "Watch")
+		PULSE (5, Show_Video_Page);
+	ELSE IF (action = "Lighting")
+		PULSE (5, Show_Lighting_Page);
+	ELSE IF (action = "Shades")
+		PULSE (5, Show_Shades_Page);
+	ELSE IF (action = "Climate")
+		PULSE (5, Show_HVAC_Page);
+	ELSE IF (action = "Security")
+		PULSE (5, Show_Security_Page);
+	ELSE IF (action = "Settings")
+		PULSE (5, Show_Settings_Page);
+	ELSE IF (action = "Pool")
+		PULSE (5, Show_Pool_Page);
+
+}
+                              
+//=====// EVENTS //=====//
+
+PUSH Update {
+	RebuildList ();
+}
+
+PUSH List_Button {
+	GetButtonAction (GETLASTMODIFIEDARRAYINDEX());
+}
+
+CHANGE Audio_Sources_Available { RebuildList (); }
+CHANGE Video_Sources_Available { RebuildList (); }
+CHANGE Lighting_Available      { RebuildList (); }
+CHANGE Shades_Available        { RebuildList (); }
+CHANGE HVAC_Available          { RebuildList (); }
+CHANGE Security_Available      { RebuildList (); }
+CHANGE Settings_Available      { RebuildList (); }
+CHANGE Pool_Available      	   { RebuildList (); }
+
+//=====// MAIN //=====//
+

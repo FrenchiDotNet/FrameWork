@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Crestron.SimplSharp;
 
 namespace FrameWork {
@@ -9,19 +10,14 @@ namespace FrameWork {
     /**
      * Class:       Interface
      * @author:     Ryan French
-     * @version:    1.2k
+     * @version:    1.3a
      * Description: ...
-     * 
-     * CHANGELOG:
-     * 
-     * 1.1a - Added Light support, parsing commands.
-     * 1.2f - Added Security Keypad support.
      */
     public class Interface {
 
         //===================// Members //===================//
 
-        public string version = "1.2k";
+        public string version = "1.3a";
 
         public string name;
         public ushort id;
@@ -33,28 +29,18 @@ namespace FrameWork {
         internal List<Source> audioSourceList;
         internal List<Source> videoSourceList;
         internal List<sysMenuItem> sysMenuList;
-        internal List<Light> lightingLoadList;    // <- No longer being inverted for tablets, remove these 
-        internal List<Light> lightingPresetList;  // <- No longer being inverted for tablets, remove these
-        internal List<Shade> shadeList;           // <- No longer being inverted for tablets, remove these
         internal List<SecurityKeypad> securityKeypadList;
 
         internal SecurityKeypad currentSecurityKeypad;
 
         internal bool _invertSourceLists;
-
         internal bool _enableLightingControl;
         internal bool _enableShadeControl;
         internal bool _enableHVACControl;
         internal bool _enableSecurityControl;
         internal bool _enablePoolControl;
-
-        public ushort invertSourceLists { set { _invertSourceLists = value == 1 ? true : false; } get { return (ushort)(_invertSourceLists ? 1 : 0); } }
-
-        public ushort enableLightingControl { set { _enableLightingControl = value == 1 ? true : false; } get { return (ushort)(_enableLightingControl ? 1 : 0); } }
-        public ushort enableShadeControl    { set { _enableShadeControl = value == 1 ? true : false; } get { return (ushort)(_enableShadeControl ? 1 : 0); } }
-        public ushort enableHVACControl     { set { _enableHVACControl = value == 1 ? true : false; } get { return (ushort)(_enableHVACControl ? 1 : 0); } }
-        public ushort enableSecurityControl { set { _enableSecurityControl = value == 1 ? true : false; } get { return (ushort)(_enableSecurityControl ? 1 : 0); } }
-        public ushort enablePoolControl     { set { _enablePoolControl = value == 1 ? true : false; } get { return (ushort)(_enablePoolControl ? 1 : 0); } }
+        internal bool _enableVoiceControlSetup;
+        internal bool _enableStartupEvents;
 
         public ushort sourceListDisplaySize;
         public ushort sourceListMaxSize;
@@ -75,6 +61,9 @@ namespace FrameWork {
         // S+ delegate for sending details of Zone List items
         public delegate void DelegateZoneListUpdate(ushort position, ushort sourceIcon, SimplSharpString zoneName, SimplSharpString sourceName);
         public DelegateZoneListUpdate ZoneListUpdate { get; set; }
+
+        // S+ delegate for sending the lights feedback of Zone List items
+        public DelegateUshort2 ZoneListLightsUpdate { get; set; }
 
         // S+ delegate for sending details of Source List items
         public delegate void DelegateSourceListUpdate(ushort position, ushort listType, ushort sourceID, SimplSharpString sourceName);
@@ -131,7 +120,7 @@ namespace FrameWork {
         public DelegateUshort3 ShadeFbUpdate { get; set; } 
 
         // S+ delegate for sending HVAC list item details
-        public delegate void DelegateHVACListUpdate (ushort position, SimplSharpString label, ushort type, ushort hasFanMode, ushort hasFanSpeed);
+        public delegate void DelegateHVACListUpdate (ushort position, SimplSharpString label, ushort type, ushort fanOrPower, ushort hasFanSpeed);
         public DelegateHVACListUpdate HVACListUpdate { get; set; }
 
         // S+ delegate for sending HVAC feedback
@@ -146,6 +135,10 @@ namespace FrameWork {
 
         // S+ delegates for sending Pool feedback
         public DelegateUshortUshortString PoolFbUpdate { get; set; }
+
+        // S+ delegates for sending Voice Control Setup feedback
+        public DelegateUshortString VoiceControlEvent { get; set; }
+        public DelegateString VoiceControlIDEvent { get; set; }
 
 
         //===================// Constructor //===================//
@@ -162,9 +155,6 @@ namespace FrameWork {
             audioSourceList    = new List<Source>();
             videoSourceList    = new List<Source>();
             sysMenuList        = new List<sysMenuItem>();
-            lightingLoadList   = new List<Light>();
-            lightingPresetList = new List<Light>();
-            shadeList          = new List<Shade>();
             securityKeypadList = new List<SecurityKeypad>();
 
         }
@@ -175,10 +165,9 @@ namespace FrameWork {
          * Method: Initialize
          * Access: public
          * @return: void
-         * Description: ...
+         * Description: Method run after all modules have reported in to Core
          */
         public void Initialize() {
-            // Method run after all modules have reported in to Core
 
             try {
 
@@ -195,6 +184,9 @@ namespace FrameWork {
                 Core.ConsoleMessage(String.Format("[ERROR] Error during Interface {0} initialization: '{1}'", this.id, e));
 
             }
+
+            Core.ConsoleMessage(String.Format("[STARTUP] Finished referencing assets on Interface {0} [{1}]", this.id, this.name));
+            Core.RegCompleteCallback(2);
 
         }
 
@@ -265,6 +257,7 @@ namespace FrameWork {
                 TriggerUpdateStringOutput((ushort)SerialJoins.CurrentZone, currentZone.name);
                 TriggerUpdateStringOutput((ushort)SerialJoins.CurrentSource, currentZone.currentSourceName);
                 TriggerUpdateDigitalOutput((ushort)DigitalJoins.Mute_Fb, (ushort)(currentZone.muteState ? 1 : 0));
+                TriggerUpdateDigitalOutput((ushort)DigitalJoins.DirectVolumeAvailable, (ushort)(currentZone.hasDirectVolume ? 1 : 0));
 
                 // Subscribe to new zone events
                 this.currentZone.UpdateCurrentSourceNameEvent += new DelegateString(this.ZoneCurrentSourceNameHandler);
@@ -366,6 +359,11 @@ namespace FrameWork {
                 this.PoolFbUpdate((ushort)PoolCommand.System_Type, (ushort)Core.pool.systemType, "");
                 this.PoolFbUpdate((ushort)PoolCommand.ModeSelect_Pool_Fb, (ushort)(Core.pool.currentMode == PoolMode.Pool ? 1 : 0), "");
                 this.PoolFbUpdate((ushort)PoolCommand.ModeSelect_Spa_Fb, (ushort)(Core.pool.currentMode == PoolMode.Spa ? 1 : 0), "");
+                this.PoolFbUpdate((ushort)PoolCommand.Ambient_Temp_Fb, (ushort)Core.pool.currentAmbientTemp, "");
+                this.PoolFbUpdate((ushort)PoolCommand.Pool_Temp_Fb, (ushort)Core.pool.currentPoolTemp, "");
+                this.PoolFbUpdate((ushort)PoolCommand.Pool_Setpoint_Fb, (ushort)Core.pool.currentPoolSetpoint, "");
+                this.PoolFbUpdate((ushort)PoolCommand.Spa_Temp_Fb, (ushort)Core.pool.currentSpaTemp, "");
+                this.PoolFbUpdate((ushort)PoolCommand.Spa_Setpoint_Fb, (ushort)Core.pool.currentSpaSetpoint, "");
 
             }
 
@@ -445,6 +443,11 @@ namespace FrameWork {
 
                 case "EnterSetup": {
                     UpdateDigitalOutput((ushort)DigitalJoins.EnterSetup, 1);
+                }
+                break;
+                case "VoiceCtrlPopup": {
+                    UpdateVoiceControlFeedback();
+                    UpdateDigitalOutput((ushort)DigitalJoins.Popup_Request_Voice_Control, 1);
                 }
                 break;
                 case "DispCmdPopup": {
@@ -716,16 +719,25 @@ namespace FrameWork {
 
                 // Parse list into zoneList
                 if (zlist.ToLower() == "all") { // Add All Zones
-                    foreach (KeyValuePair<ushort, Zone> zn in Core.Zones) {
+                    int count = Core.ZoneList.Count;
+                    for (int i = 0; i < count; i++) {
                         // Add zone to zoneList
-                        this.zoneList.Add(zn.Value);
+                        this.zoneList.Add(Core.ZoneList[i]);
                     }
                 } else { // Add Specified Zones
-                    foreach (string zn in zlist.Replace(" ", "").Split(',')) {
-                        zid = ushort.Parse(zn);
-                        if (Core.Zones.ContainsKey(zid))
-                            this.zoneList.Add(Core.Zones[zid]);
+
+                    // Error check list
+                    Regex r = new Regex("[^0-9,]$");
+                    if (r.IsMatch(zlist)) {
+                        Core.ConsoleMessage(String.Format("[ERROR] Invalid characters in Zone List on Interface {0} [{1}].", this.id, this.name));
+                    } else {
+                        foreach (string zn in zlist.Replace(" ", "").Split(',')) {
+                            zid = ushort.Parse(zn);
+                            if (Core.Zones.ContainsKey(zid))
+                                this.zoneList.Add(Core.Zones[zid]);
+                        }
                     }
+
                 }
 
             }
@@ -739,6 +751,9 @@ namespace FrameWork {
                 // Send zone details to S+ Zone List
                 if (ZoneListUpdate != null)
                     ZoneListUpdate((ushort)i, Core.Sources[zoneList[i].currentSource].icon, zoneList[i].name, zoneList[i].currentSourceName);
+
+                // Subscribe to zone lighting feedback updates
+                zoneList[i].UpdateLightsStateEvent += new Zone.UpdateLightsState(this.ZoneUpdateLightsStateEvent);
             }
 
             TriggerUpdateAnalogOutput((ushort)AnalogJoins.ZoneList_NumberOfItems, (ushort)size);
@@ -876,17 +891,21 @@ namespace FrameWork {
                         unit = currentZone.hvacs[(int)i];
 
                         // Send List details
-                        HVACListUpdate((ushort)(i + 1), unit.name, (ushort)unit.controlType, (ushort)(unit.hasFanModeControl ? 1 : 0), (ushort)(unit.hasFanSpeedControl ? 1 : 0));
+                        HVACListUpdate((ushort)(i + 1), unit.name, (ushort)unit.controlType, (ushort)unit.fanOrPower, (ushort)(unit.hasFanSpeedControl ? 1 : 0));
 
                         // Send Feedback State
                         HVACFbHandler(unit.id, HVACCommand.SystemMode_Off_Fb, (ushort)(unit.currentSystemMode == "Off" ? 1: 0));
                         HVACFbHandler(unit.id, HVACCommand.SystemMode_Cool_Fb, (ushort)(unit.currentSystemMode == "Cool" ? 1 : 0));
                         HVACFbHandler(unit.id, HVACCommand.SystemMode_Heat_Fb, (ushort)(unit.currentSystemMode == "Heat" ? 1 : 0));
                         HVACFbHandler(unit.id, HVACCommand.SystemMode_Auto_Fb, (ushort)(unit.currentSystemMode == "Auto" ? 1 : 0));
-
-                        if (unit.hasFanModeControl) {
+                        
+                        // Fan Mode or Power State
+                        if (unit.fanOrPower == HVACControlType.FanPwr_Fan) {
                             HVACFbHandler(unit.id, HVACCommand.FanMode_Auto_Fb, (ushort)(unit.currentFanMode == "Auto" ? 1 : 0));
                             HVACFbHandler(unit.id, HVACCommand.FanMode_On_Fb, (ushort)(unit.currentFanMode == "On" ? 1 : 0));
+                        } else if (unit.fanOrPower == HVACControlType.FanPwr_Pwr) {
+                            HVACFbHandler(unit.id, HVACCommand.Power_On_Fb, (ushort)(unit.powerIsOn ? 1 : 0));
+                            HVACFbHandler(unit.id, HVACCommand.Power_Off_Fb, (ushort)(unit.powerIsOn ? 0 : 1));
                         }
 
                         if (unit.hasFanSpeedControl) {
@@ -912,8 +931,7 @@ namespace FrameWork {
 
                 }
 
-            } else
-                CrestronConsole.PrintLine("Error in Interface[{0}].BuildHVACList: HVACListUpdate delegate is null", this.id);
+            }
 
             // Send NumberOfItems for HVAC List
             TriggerUpdateAnalogOutput((ushort)AnalogJoins.HVACList_NumberOfItems, (ushort)currentZone.hvacs.Count);
@@ -940,18 +958,24 @@ namespace FrameWork {
             if (lTmp == "")
                 return;
 
-            string[] list = lTmp.Replace(" ", "").Split(',');
-            ushort kpid;
-            for (int i = 0; i < list.Length; i++) {
-                kpid = ushort.Parse(list[i]);
-                if (Core.SecurityKeypads.ContainsKey(kpid))
-                    securityKeypadList.Add(Core.SecurityKeypads[kpid]);
-            }
+            // Error check list
+            Regex r = new Regex("[^0-9,]$");
+            if (r.IsMatch(lTmp)) {
+                Core.ConsoleMessage(String.Format("[ERROR] Invalid characters in Security Keypad List on Interface {0} [{1}].", this.id, this.name));
+            } else {
+                string[] list = lTmp.Replace(" ", "").Split(',');
+                ushort kpid;
+                for (int i = 0; i < list.Length; i++) {
+                    kpid = ushort.Parse(list[i]);
+                    if (Core.SecurityKeypads.ContainsKey(kpid))
+                        securityKeypadList.Add(Core.SecurityKeypads[kpid]);
+                }
 
-            // If keypads are available, enable interface button and set first keypad
-            if (hasSecurityKeypad) {
-                SetCurrentSecurityKeypad(securityKeypadList[0].id);
-                UpdateDigitalOutput((ushort)DigitalJoins.SecurityKeypadAvailable, 1);
+                // If keypads are available, enable interface button and set first keypad
+                if (hasSecurityKeypad) {
+                    SetCurrentSecurityKeypad(securityKeypadList[0].id);
+                    UpdateDigitalOutput((ushort)DigitalJoins.SecurityKeypadAvailable, 1);
+                }
             }
 
         }
@@ -1053,16 +1077,25 @@ namespace FrameWork {
 
             // Parse into List
             if (sList.ToLower() == "all") { // Add All Zones
-                foreach (KeyValuePair<ushort, Zone> zn in Core.Zones) {
+                int count = Core.ZoneList.Count;
+                for (int i = 0; i < count; i++) {
                     // Add zone to zoneList
-                    this.shareZones.Add(zn.Value);
+                    this.shareZones.Add(Core.ZoneList[i]);
                 }
             } else { // Add Specified Zones
-                foreach (string zn in sList.Replace(" ", "").Split(',')) {
-                    sid = ushort.Parse(zn);
-                    if (Core.Zones.ContainsKey(sid))
-                        this.shareZones.Add(Core.Zones[sid]);
+
+                // Error check list
+                Regex r = new Regex("[^0-9,]$");
+                if (r.IsMatch(sList)) {
+                    Core.ConsoleMessage(String.Format("[ERROR] Invalid characters in Share Zones List on Interface {0} [{1}].", this.id, this.name));
+                } else {
+                    foreach (string zn in sList.Replace(" ", "").Split(',')) {
+                        sid = ushort.Parse(zn);
+                        if (Core.Zones.ContainsKey(sid))
+                            this.shareZones.Add(Core.Zones[sid]);
+                    }
                 }
+
             }
         }
 
@@ -1143,6 +1176,24 @@ namespace FrameWork {
             }
         }
 
+
+        /**
+         * Method: UpdateVoiceControlFeedback
+         * Access: internal
+         * @return: void
+         * Description: Gets current stored values of Voice Control registration variables
+         */
+        internal void UpdateVoiceControlFeedback() {
+            if (VoiceControlEvent == null || VoiceControlIDEvent == null)
+                return;
+
+            VoiceControlEvent((ushort)(Core.VoiceControlConnected ? 1 : 0), "connected");
+            VoiceControlEvent((ushort)(Core.VoiceControlRegistered ? 1 : 0), "registered");
+            VoiceControlEvent((ushort)(Core.VoiceControlReady ? 1 : 0), "ready");
+            VoiceControlIDEvent(Core.VoiceControlRegistrationID);
+
+        }
+
         /**
          * Method: UpdateSourceListFb
          * Access: internal
@@ -1184,6 +1235,11 @@ namespace FrameWork {
         internal void UpdateSysMenuList() {
             sysMenuList = new List<sysMenuItem>();
 
+            // Check for Voice Control Setup permission
+            if (_enableVoiceControlSetup && Core.VoiceControlEnabled) {
+                sysMenuList.Add(new sysMenuItem("Voice Control", 62, "VoiceCtrlPopup"));
+            }
+
             // Check for TV Control button
             if (currentZone.hasDisplay) {
                 sysMenuList.Add(new sysMenuItem("TV Control", 143, "DispCmdPopup"));
@@ -1195,14 +1251,15 @@ namespace FrameWork {
             }
             
             // Check for AVR Button
+            // ...
 
+            // Send list to Interface
             for (int i = 0; i < sysMenuList.Count; i++ ) {
-                //CrestronConsole.PrintLine("SysMenu item {0}: label {1}, icon {2}", i, sysMenuList[i].label, sysMenuList[i].icon);
                 SysMenuListUpdate((ushort)i, sysMenuList[i].label, sysMenuList[i].icon);
             }
 
             // Clear out unused buttons
-            for (int i = sysMenuList.Count; i < 4; i++ ) {
+            for (int i = sysMenuList.Count; i < 6; i++ ) {
                 SysMenuListUpdate((ushort)i, "", 169);
             }
 
@@ -1241,7 +1298,7 @@ namespace FrameWork {
             } else if(_action == 1) { // Volume Up
                 this.currentZone.VolumeUp(_state == 0 ? false : true);
             } else if (_action == 3) { // Mute
-                //CrestronConsole.PrintLine(String.Format("Interface Mute Button Pressed"));
+                this.currentZone.VolumeMuteToggle(_state);
                 if (_state == 1)
                     this.currentZone.ToggleMuteState();
             }
@@ -1328,6 +1385,20 @@ namespace FrameWork {
         }
 
         /**
+         * Method: VolumeDirectInput
+         * Access: public
+         * Description: Receives analog value from slider on touchpanel and passes to current Zone
+         */
+        public void VolumeDirectInput(ushort _level) {
+
+            if (!currentZone.hasDirectVolume)
+                return;
+
+            currentZone.SetVolumeDirect(_level);
+
+        }
+
+        /**
          * Method: TriggerUpdateDigitalOutput
          * Access: internal
          * @param: ushort _join
@@ -1367,6 +1438,18 @@ namespace FrameWork {
             if (UpdateStringOutput != null) {
                 UpdateStringOutput(_join, (SimplSharpString)_string);
             }
+        }
+
+
+        /**
+         * Method: TriggerUpdateStringOutput
+         * Access: internal
+         * Description: Sends text from Voice Control setup menu to Core when 'Send' button is pressed on Interface
+         */
+        public void VoiceControlSendRegistrationCode(string _code) {
+
+            Core.VoiceControlSendRegistrationCode(_code);
+
         }
 
         //===================// Event Handlers //===================//
@@ -1434,6 +1517,21 @@ namespace FrameWork {
          */
         public void ZoneUpdateDisplayAvailableHandler(ushort _state) {
             //CrestronConsole.PrintLine("Interface {0} ZoneDisplayAvailable event: {1}", this.id, _state);
+        }
+
+        /**
+         * Method: ZoneUpdateLightsStateEvent
+         * Description: Receives update from CurrentZone's UpdateLightsStateEvent to pass zone light fb status
+         *              to interface.
+         */
+        public void ZoneUpdateLightsStateEvent(Zone _zn, bool _state) {
+
+            // Send light status to interface's ZoneList
+            ushort pos = (ushort)zoneList.IndexOf(_zn);
+
+            if (ZoneListLightsUpdate != null)
+                ZoneListLightsUpdate(pos, (ushort)(_state ? 1 : 0));
+
         }
 
         /**
@@ -1595,6 +1693,105 @@ namespace FrameWork {
 
         }
 
+        /**
+         * Method: StartupCompleteEventHandler
+         * Description: ...
+         */
+        public void StartupCompleteEventHandler() {
+            TriggerUpdateDigitalOutput((ushort)DigitalJoins.StartupComplete, 1);
+        }
+
+        /**
+         * Method: StartupProgressEventHandler
+         * Description: ...
+         */
+        public void StartupProgressEventHandler(int _val) {
+            TriggerUpdateAnalogOutput((ushort)AnalogJoins.StartupProgress, (ushort)_val);
+
+        }
+
+        //===================// Get / Set //===================//
+
+        /**
+         * Method: invertSourceLists
+         * Description: ...
+         */
+        public ushort invertSourceLists { 
+            set { _invertSourceLists = value == 1 ? true : false; } 
+            get { return (ushort)(_invertSourceLists ? 1 : 0); }
+        }
+
+        /**
+         * Method: enableLightingControl
+         * Description: ...
+         */
+        public ushort enableLightingControl { 
+            set { _enableLightingControl = value == 1 ? true : false; } 
+            get { return (ushort)(_enableLightingControl ? 1 : 0); } 
+        }
+
+        /**
+         * Method: enableShadeControl
+         * Description: ...
+         */
+        public ushort enableShadeControl { 
+            set { _enableShadeControl = value == 1 ? true : false; } 
+            get { return (ushort)(_enableShadeControl ? 1 : 0); } 
+        }
+
+        /**
+         * Method: enableHVACControl
+         * Description: ...
+         */
+        public ushort enableHVACControl { 
+            set { _enableHVACControl = value == 1 ? true : false; } 
+            get { return (ushort)(_enableHVACControl ? 1 : 0); } 
+        }
+
+        /**
+         * Method: enableSecurityControl
+         * Description: ...
+         */
+        public ushort enableSecurityControl { 
+            set { _enableSecurityControl = value == 1 ? true : false; } 
+            get { return (ushort)(_enableSecurityControl ? 1 : 0); } 
+        }
+
+        /**
+         * Method: enablePoolControl
+         * Description: ...
+         */
+        public ushort enablePoolControl { 
+            set { _enablePoolControl = value == 1 ? true : false; } 
+            get { return (ushort)(_enablePoolControl ? 1 : 0); } 
+        }
+
+        /**
+         * Method: enableVoiceControlSetup
+         * Description: ...
+         */
+        public ushort enableVoiceControlSetup { 
+            set { _enableVoiceControlSetup = value == 1 ? true : false; } 
+            get { return (ushort)(_enableVoiceControlSetup ? 1 : 0); } 
+        }
+
+        /**
+         * Method: enableStartupEvents
+         * Description: ...
+         */
+        public ushort enableStartupEvents {
+            set {
+                _enableStartupEvents = value == 1 ? true : false;
+                if (_enableStartupEvents) {
+                    Core.startupProgressEvent += new DelegateInt(this.StartupProgressEventHandler);
+                    Core.startupCompleteEvent += new DelegateEmpty(this.StartupCompleteEventHandler);
+                }
+            }
+            get {
+                return (ushort)(_enableStartupEvents ? 1 : 0);
+            }
+        }
+
 
     } // End Interface Class
 
@@ -1676,6 +1873,7 @@ namespace FrameWork {
         Popup_Request_Display_Commands,
         Popup_Request_Lift_Commands,
         Popup_Request_AVR_Commands,
+        Popup_Request_Voice_Control,
         Mute_Fb = 16,
         EnterSetup = 21,
         ShareListAvailable = 31,
@@ -1683,8 +1881,9 @@ namespace FrameWork {
         ShadeListAvailable,
         HVACListAvailable,
         SecurityKeypadAvailable,
-        PoolControlAvailable
-
+        PoolControlAvailable,
+        DirectVolumeAvailable,
+        StartupComplete
     }
 
     public enum AnalogJoins {
@@ -1702,7 +1901,8 @@ namespace FrameWork {
         LightingList_NumberOfPresets,
         ShadeList_NumberOfItems = 35,
         HVACList_NumberOfItems,
-        SecurityKeypadList_NumberOfItems
+        SecurityKeypadList_NumberOfItems,
+        StartupProgress
 
     }
 

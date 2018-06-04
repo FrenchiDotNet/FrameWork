@@ -1,0 +1,69 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+*/
+
+#SYMBOL_NAME "FrameWork Voice Control Link 1.0"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#PRINT_TO_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+//=====// I/O //=====//
+
+DIGITAL_INPUT Not_Connected,
+              Connected,
+              Registration_Completed,
+              Ready;
+
+STRING_INPUT  RegistrationID[32];
+
+STRING_OUTPUT RegistrationCode;
+
+//=====// VARIABLES //=====//
+
+//=====// FUNCTIONS //=====//
+
+CALLBACK FUNCTION VoiceControlRegistrationCodeEventHandler (STRING _code) {
+	RegistrationCode = _code;
+}
+
+//=====// EVENTS //=====//
+
+PUSH Not_Connected {
+	Core.VoiceControlRegistrationEvent("connected", 0);
+}
+
+PUSH Connected {
+	Core.VoiceControlRegistrationEvent("connected", 1);
+}
+
+RELEASE Connected {
+	Core.VoiceControlRegistrationEvent("connected", 0);
+}
+
+CHANGE Registration_Completed {
+	Core.VoiceControlRegistrationEvent("registered", Registration_Completed);
+}
+
+CHANGE Ready {
+	Core.VoiceControlRegistrationEvent("ready", Ready);
+}
+
+CHANGE RegistrationID {
+	Core.VoiceControlRegistrationIDEvent(RegistrationID);
+}
+
+//=====// MAIN //=====//
+
+FUNCTION Main () {
+
+	WAITFORINITIALIZATIONCOMPLETE();
+
+	Core.VoiceControlEnable(1);
+
+	REGISTERDELEGATE (Core, VoiceControlRegistrationCodeEvent, VoiceControlRegistrationCodeEventHandler);
+
+}
+

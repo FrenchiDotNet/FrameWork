@@ -9,7 +9,7 @@ namespace FrameWork {
     /**
      * Class:       Light
      * @author:     Ryan French
-     * @version:    1.0
+     * @version:    1.3a
      * Description: Class for storing details and control functions for an individual lighting load or preset.
      */
     public class Light {
@@ -28,9 +28,7 @@ namespace FrameWork {
         public DelegateUshort2 TriggerSendCommand { get; set; } // ushort1 = LightCommand, ushort2 = press/release
         public DelegateUshort  TriggerSendLevel { get; set; }
 
-        // Events for status updates on subscribed Interfaces
-        //public event DelegateUshort  UpdateLevelEvent;
-        //public event DelegateUshort2 UpdateStatusEvent; // ushort1 = LightCommand, ushort2 = feedback state
+        public event DelegateEmpty UpdateEvent; // Send notification to subscribed Zones
         
         public delegate void DelegateLightFbUpdate(ushort id, LightCommand action, ushort state);
         public event DelegateLightFbUpdate UpdateFeedback;
@@ -114,16 +112,6 @@ namespace FrameWork {
 
             this.isOn = _isOn;
 
-            /*if (this.UpdateStatusEvent != null) {
-                if (this.isOn) {
-                    this.UpdateStatusEvent((ushort)LightCommand.On, 1);
-                    this.UpdateStatusEvent((ushort)LightCommand.Off, 0);
-                } else {
-                    this.UpdateStatusEvent((ushort)LightCommand.On, 0);
-                    this.UpdateStatusEvent((ushort)LightCommand.Off, 1);
-                }
-            }*/
-
             if (this.UpdateFeedback != null) {
                 if (this.isOn) {
                     this.UpdateFeedback(this.id, LightCommand.On, 1);
@@ -133,6 +121,9 @@ namespace FrameWork {
                     this.UpdateFeedback(this.id, LightCommand.Off, 1);
                 }
             }
+
+            if (this.UpdateEvent != null)
+                UpdateEvent();
 
         }
 

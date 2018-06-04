@@ -1,22 +1,16 @@
 /*
 Dealer Name: Ask The Advisors
 Programmer: Ryan French
-
---- CHANGELOG ---
-
-8/14/17 - 1.2i - Added digital join to show/hide Lighting button.
-			   - Added enable/disable joins for all subsystem controls
-
 */
 
-#SYMBOL_NAME "FrameWork Interface Link 1.2k"
+#SYMBOL_NAME "FrameWork Interface Link 1.3a3"
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
 #ENABLE_TRACE
 #PRINT_TO_TRACE
 #USER_SIMPLSHARP_LIBRARY "FrameWork"
 
-#DEFINE_CONSTANT TARGET_SSHARP_VERSION "1.2k"
+#DEFINE_CONSTANT TARGET_SSHARP_VERSION "1.3a"
 
 #DEFINE_CONSTANT TRUE 1
 #DEFINE_CONSTANT FALSE 0
@@ -32,6 +26,7 @@ Programmer: Ryan French
 #DEFINE_CONSTANT DJ_POPUPDISPLAYCMD          7
 #DEFINE_CONSTANT DJ_POPUPLIFTCMD             8
 #DEFINE_CONSTANT DJ_POPUPAVRCMD              9
+#DEFINE_CONSTANT DJ_POPUPVOICECMD           10
 #DEFINE_CONSTANT DJ_MUTEFB                  16
 #DEFINE_CONSTANT DJ_ENTERSETUP              21
 #DEFINE_CONSTANT DJ_SHARELISTAVAILABLE      31
@@ -40,6 +35,8 @@ Programmer: Ryan French
 #DEFINE_CONSTANT DJ_HVACLISTAVAILABLE       34
 #DEFINE_CONSTANT DJ_SECURITYKPAVAILABLE     35
 #DEFINE_CONSTANT DJ_POOLCONTROLAVAILABLE    36
+#DEFINE_CONSTANT DJ_ZONEHASDIRECTVOL        37
+#DEFINE_CONSTANT DJ_STARTUPCOMPLETE         38
 
 #DEFINE_CONSTANT AJ_CURRENTZONE       1
 #DEFINE_CONSTANT AJ_CURRENTSOURCE     2
@@ -55,6 +52,7 @@ Programmer: Ryan French
 #DEFINE_CONSTANT AJ_SHADECOUNT       35
 #DEFINE_CONSTANT AJ_HVACCOUNT        36
 #DEFINE_CONSTANT AJ_SECURITYKPCOUNT  37
+#DEFINE_CONSTANT AJ_STARTUPPROGRESS  38
 
 #DEFINE_CONSTANT SJ_CURRENTZONENAME   1
 #DEFINE_CONSTANT SJ_CURRENTSOURCENAME 2
@@ -124,10 +122,24 @@ Programmer: Ryan French
 #DEFINE_CONSTANT FANCALL_FB  25
 #DEFINE_CONSTANT T_SETPOINT  26
 #DEFINE_CONSTANT T_AMBIENT   27
+#DEFINE_CONSTANT H_INUSE     28
+#DEFINE_CONSTANT H_PON_FB    29
+#DEFINE_CONSTANT H_POF_FB    30
+#DEFINE_CONSTANT H_PON       31
+#DEFINE_CONSTANT H_POF       32
+#DEFINE_CONSTANT H_BTN_1     33
+#DEFINE_CONSTANT H_BTN_2     34
+#DEFINE_CONSTANT H_BTN_3     35
+#DEFINE_CONSTANT H_BTN_4     36
+#DEFINE_CONSTANT H_BTN_5     37
 
 #DEFINE_CONSTANT HTYPE_AUTO         1
 #DEFINE_CONSTANT HTYPE_HEATCOOL     2
 #DEFINE_CONSTANT HTYPE_HEATCOOLAUTO 3
+#DEFINE_CONSTANT HTYPE_HEATCOOLOFF  4
+#DEFINE_CONSTANT HTYPE_FANPWR_NONE  5
+#DEFINE_CONSTANT HTYPE_FANPWR_FAN   6
+#DEFINE_CONSTANT HTYPE_FANPWR_PWR   7
 
 // Security
 
@@ -232,6 +244,8 @@ DIGITAL_INPUT _SKIP_,
 			  _SKIP_,
 			  _SKIP_,
 			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
 			  PowerOff_Zone,
 			  PowerOff_All,
 			  Zone_VolumeUp,
@@ -273,10 +287,11 @@ DIGITAL_INPUT _SKIP_,
 			  Pool_Spa_Setpoint_Down,
 			  Pool_Spa_Heater_Toggle,
 			  Pool_Filter_Pump_Toggle,
+			  VoiceControl_Send_RegCode,
 			  ZoneList[ZONELISTSIZE],
 			  SourceList_Listen[SOURCELISTSIZE],
 			  SourceList_Watch[SOURCELISTSIZE],
-			  SysMenu_Button[4],
+			  SysMenu_Button[6],
 			  ShareList_Button[ZONELISTSIZE],
 			  ShareList_Mute[ZONELISTSIZE],
 			  ShareList_VolumeUp[ZONELISTSIZE],
@@ -296,22 +311,27 @@ DIGITAL_INPUT _SKIP_,
 			  Shade_View[SHADELISTSIZE],
 			  HVAC_Setpoint_Up[HVACLISTSIZE],
 			  HVAC_Setpoint_Down[HVACLISTSIZE],
-			  HVAC_SystemMode_Off[HVACLISTSIZE],
-			  HVAC_SystemMode_Cool[HVACLISTSIZE],
-			  HVAC_SystemMode_Heat[HVACLISTSIZE],
-			  HVAC_SystemMode_Auto[HVACLISTSIZE],
-			  HVAC_FanMode_On[HVACLISTSIZE],
-			  HVAC_FanMode_Auto[HVACLISTSIZE],
+			  HVAC_Button_1[HVACLISTSIZE],
+			  HVAC_Button_2[HVACLISTSIZE],
+			  HVAC_Button_3[HVACLISTSIZE],
+			  HVAC_Button_4[HVACLISTSIZE],
+			  HVAC_Button_5[HVACLISTSIZE],
 			  HVAC_FanSpeed_Low[HVACLISTSIZE],
 			  HVAC_FanSpeed_Medium[HVACLISTSIZE],
 			  HVAC_FanSpeed_High[HVACLISTSIZE],
 			  HVAC_FanSpeed_Max[HVACLISTSIZE],
 			  Pool_Aux_Toggle[12];
 
+ANALOG_INPUT  Zone_VolumeDirect;
+
+STRING_INPUT  VoiceControl_RegistrationCode[32];
+
 DIGITAL_OUTPUT _SKIP_,
 			   _SKIP_,
 			   _SKIP_, 
 			   _SKIP_, 
+			   _SKIP_,
+			   _SKIP_,
 			   _SKIP_,
 			   _SKIP_,
 			   _SKIP_,
@@ -331,8 +351,10 @@ DIGITAL_OUTPUT _SKIP_,
 			   Request_TVControl_Popup,
 			   Request_LiftControl_Popup,
 			   Request_AVRControl_Popup,
+			   Request_VoiceControl_Popup,
 			   Enter_Setup,
 			   Zone_Mute_Fb,
+			   Zone_HasDirectVolume,
 			   Security_Disarm_Fb,
 			   Security_Arm_Away_Fb,
 			   Security_Arm_Home_Fb,
@@ -354,8 +376,13 @@ DIGITAL_OUTPUT _SKIP_,
 			   Pool_Mode_Spa_Fb,
 			   Pool_Pool_Heater_Fb,
 			   Pool_Spa_Heater_Fb,
-			   Pool_Filter_Pump_Fb,        
+			   Pool_Filter_Pump_Fb,  
+			   VoiceControl_Connected_Fb,
+			   VoiceControl_Registered_Fb,
+			   VoiceControl_Ready_Fb,
+			   Startup_Complete_Fb,      
 			   ZoneList_Fb[ZONELISTSIZE],
+			   ZoneList_Lights[ZONELISTSIZE],
 			   SourceList_Listen_Fb[SOURCELISTSIZE],
 			   SourceList_Listen_Visible[SOURCELISTSIZE],
 			   SourceList_Watch_Fb[SOURCELISTSIZE],
@@ -382,12 +409,16 @@ DIGITAL_OUTPUT _SKIP_,
 			   Shade_Type_UpDown[SHADELISTSIZE],
 			   Shade_Type_UpDownStop[SHADELISTSIZE],
 			   Shade_Type_UpDownStopView[SHADELISTSIZE],
-			   HVAC_SystemMode_Off_Fb[HVACLISTSIZE],
-			   HVAC_SystemMode_Cool_Fb[HVACLISTSIZE],
-			   HVAC_SystemMode_Heat_Fb[HVACLISTSIZE],
-			   HVAC_SystemMode_Auto_Fb[HVACLISTSIZE],
-			   HVAC_FanMode_On_Fb[HVACLISTSIZE],
-			   HVAC_FanMode_Auto_Fb[HVACLISTSIZE],
+			   HVAC_Button_1_Fb[HVACLISTSIZE],
+			   HVAC_Button_2_Fb[HVACLISTSIZE],
+			   HVAC_Button_3_Fb[HVACLISTSIZE],
+			   HVAC_Button_4_Fb[HVACLISTSIZE],
+			   HVAC_Button_5_Fb[HVACLISTSIZE],
+			   HVAC_Button_1_Visible[HVACLISTSIZE],
+			   HVAC_Button_2_Visible[HVACLISTSIZE],
+			   HVAC_Button_3_Visible[HVACLISTSIZE],
+			   HVAC_Button_4_Visible[HVACLISTSIZE],
+			   HVAC_Button_5_Visible[HVACLISTSIZE],
 			   HVAC_FanSpeed_Low_Fb[HVACLISTSIZE],
 			   HVAC_FanSpeed_Medium_Fb[HVACLISTSIZE],
 			   HVAC_FanSpeed_High_Fb[HVACLISTSIZE],
@@ -395,10 +426,7 @@ DIGITAL_OUTPUT _SKIP_,
 			   HVAC_CoolCall_Fb[HVACLISTSIZE],
 			   HVAC_HeatCall_Fb[HVACLISTSIZE],
 			   HVAC_FanCall_Fb[HVACLISTSIZE],
-			   HVAC_Show_Modes_AutoOff[HVACLISTSIZE],
-			   HVAC_Show_Modes_HeatCool[HVACLISTSIZE],
-			   HVAC_Show_Modes_HeatCoolAuto[HVACLISTSIZE],
-			   HVAC_Show_FanModes[HVACLISTSIZE],
+			   HVAC_Show_FanPower_Label[HVACLISTSIZE],
 			   HVAC_Show_FanSpeeds[HVACLISTSIZE],
 			   Pool_Aux_Fb[12];
 
@@ -416,7 +444,8 @@ ANALOG_OUTPUT CurrentZone,
 			  HVACList_NumberOfItems,
 			  SecurityList_NumberOfItems,
 			  Security_CustomButtonList_NumberOfItems,
-			  Pool_AuxList_NumberOfItems;
+			  Pool_AuxList_NumberOfItems,
+			  Startup_Progress;
 
 STRING_OUTPUT Current_Zone_Name,
 			  Current_Source_Name,
@@ -427,12 +456,13 @@ STRING_OUTPUT Current_Zone_Name,
 			  Pool_Pool_Temperature_Fb,
 			  Pool_Spa_Setpoint_Fb,
 			  Pool_Spa_Temperature_Fb,
-			  Pool_Ambient_Temperature_Fb;
+			  Pool_Ambient_Temperature_Fb,
+			  VoiceControl_RegistrationID;
 
 ANALOG_OUTPUT ZoneList_Icons[ZONELISTSIZE],
 			  SourceList_Listen_Icons[SOURCELISTSIZE],
 			  SourceList_Watch_Icons[SOURCELISTSIZE], 
-			  SysMenu_Icon[4],
+			  SysMenu_Icon[6],
 			  ShareList_Volume_Fb[ZONELISTSIZE],
 			  LightingLoad_Level[LIGHTLOADLISTSIZE],
 			  HVAC_Setpoint_Temp[HVACLISTSIZE],
@@ -442,13 +472,19 @@ STRING_OUTPUT ZoneList_Label[ZONELISTSIZE],
 			  ZoneList_Source[ZONELISTSIZE],
 			  SourceList_Listen_Label[SOURCELISTSIZE],
               SourceList_Watch_Label[SOURCELISTSIZE],
-			  SysMenu_Label[4],
+			  SysMenu_Label[6],
 			  ShareList_Label[ZONELISTSIZE],
 			  TVControl_Label[10],
 			  LightingLoad_Name[LIGHTLOADLISTSIZE],
 			  LightingPreset_Name[LIGHTPRESETLISTSIZE],
 			  Shade_Name[SHADELISTSIZE],
 			  HVAC_Name[HVACLISTSIZE],
+			  HVAC_Button_1_Label[HVACLISTSIZE],
+			  HVAC_Button_2_Label[HVACLISTSIZE],
+			  HVAC_Button_3_Label[HVACLISTSIZE],
+			  HVAC_Button_4_Label[HVACLISTSIZE],
+			  HVAC_Button_5_Label[HVACLISTSIZE],
+			  HVAC_FanPower_Label[HVACLISTSIZE],
 			  Security_Function_Label[4],
 			  Security_Custom_Label[6],
 			  Pool_AuxList_Label[12];
@@ -460,14 +496,16 @@ INTEGER_PARAMETER InterfaceID,
 				  EnableShadeControls,
 				  EnableHVACControls,
 				  EnableSecurityControls,
-				  EnablePoolControls;
+				  EnablePoolControls,
+				  EnableVoiceControlSetup,
+				  EnableStartupEvents;
 
 STRING_PARAMETER  InterfaceName[24], 
 				  AvailableZones[192], 
 				  ShareZones[192],
 				  SecurityKeypads[24];
 
-#BEGIN_PARAMETER_PROPERTIES InvertSourceLists, EnableLightingControls, EnableShadeControls, EnableHVACControls, EnableSecurityControls
+#BEGIN_PARAMETER_PROPERTIES InvertSourceLists, EnableLightingControls, EnableShadeControls, EnableHVACControls, EnableSecurityControls, EnableStartupEvents
 	PROPLIST = { 0d,"False" },{ 1d,"True" };
 #END_PARAMETER_PROPERTIES
 
@@ -529,6 +567,15 @@ CALLBACK FUNCTION UpdateDigitalOutputHandler(INTEGER _join, INTEGER _state) {
 		}
 		CASE(DJ_POPUPAVRCMD): {
         	PULSE(10, Request_AVRControl_Popup);
+		}
+		CASE(DJ_POPUPVOICECMD): {
+        	PULSE(10, Request_VoiceControl_Popup);
+		}
+		CASE(DJ_ZONEHASDIRECTVOL): {
+        	Zone_HasDirectVolume = _state;
+		}
+		CASE(DJ_STARTUPCOMPLETE): {
+        	Startup_Complete_Fb = _state;
 		}
 
 	}
@@ -602,6 +649,9 @@ CALLBACK FUNCTION UpdateAnalogOutputHandler(INTEGER _join, INTEGER _val) {
 		CASE(AJ_SECURITYKPCOUNT): {
         	SecurityList_NumberOfItems = _val;
 		}
+		CASE(AJ_STARTUPPROGRESS): {
+        	Startup_Progress = _val;
+		}
 	}
 }
 
@@ -629,6 +679,10 @@ CALLBACK FUNCTION ZoneListUpdateHandler(INTEGER _pos, INTEGER _sic, STRING _znm,
 	ZoneList_Label[_pos+1]  = _znm;
 	ZoneList_Icons[_pos+1]  = _sic;
 	ZoneList_Source[_pos+1] = _snm;
+}
+
+CALLBACK FUNCTION ZoneListLightsUpdateHandler(INTEGER _pos, INTEGER _state) {
+	ZoneList_Lights[_pos+1] = _state;
 }
 
 CALLBACK FUNCTION SourceListUpdateHandler(INTEGER _pos, INTEGER _type, INTEGER _sic, STRING _snm) {
@@ -796,15 +850,14 @@ CALLBACK FUNCTION ShadeListUpdateHandler(INTEGER _position, STRING _label, INTEG
 
 }
 
-CALLBACK FUNCTION HVACListUpdateHandler(INTEGER _position, STRING _label, INTEGER _type, INTEGER _hasFanMode, INTEGER _hasFanSpeed) {
+CALLBACK FUNCTION HVACListUpdateHandler(INTEGER _position, STRING _label, INTEGER _type, INTEGER _fanOrPower, INTEGER _hasFanSpeed) {
 
 	// Clear feedback
-    HVAC_SystemMode_Off_Fb[_position]  = 0;
-	HVAC_SystemMode_Cool_Fb[_position] = 0;
-	HVAC_SystemMode_Heat_Fb[_position] = 0;
-	HVAC_SystemMode_Auto_Fb[_position] = 0;
-	HVAC_FanMode_On_Fb[_position]      = 0;
-	HVAC_FanMode_Auto_Fb[_position]    = 0;
+	HVAC_Button_1_Fb[_position]        = 0;
+	HVAC_Button_2_Fb[_position]        = 0;
+	HVAC_Button_3_Fb[_position]        = 0;
+	HVAC_Button_4_Fb[_position]        = 0;
+	HVAC_Button_5_Fb[_position]        = 0;
 	HVAC_FanSpeed_Low_Fb[_position]    = 0;
 	HVAC_FanSpeed_Medium_Fb[_position] = 0;
 	HVAC_FanSpeed_High_Fb[_position]   = 0;
@@ -818,40 +871,73 @@ CALLBACK FUNCTION HVACListUpdateHandler(INTEGER _position, STRING _label, INTEGE
     IF (_type = 0) {
     
 		HVAC_Name[_position]                    = "";
-		HVAC_Show_Modes_AutoOff[_position]      = 0;
-		HVAC_Show_Modes_HeatCool[_position]     = 0;
-		HVAC_Show_Modes_HeatCoolAuto[_position] = 0;
-		HVAC_Show_FanModes[_position]           = 0;
+		HVAC_Button_3_Label[_position]          = "";
+		HVAC_Button_4_Label[_position]          = "";
+		HVAC_Button_5_Label[_position]          = "";
+		HVAC_FanPower_Label[_position]	        = "";
 		HVAC_Show_FanSpeeds[_position]          = 0;
+		HVAC_Button_3_Visible[_position]        = 0;
+		HVAC_Button_4_Visible[_position]        = 0;
+		HVAC_Button_5_Visible[_position]        = 0;
+		HVAC_Show_FanPower_Label[_position]     = 0;
 
 	} ELSE IF (_type = HTYPE_AUTO) {
 
 		HVAC_Name[_position]                    = _label;
-		HVAC_Show_Modes_AutoOff[_position]      = 1;
-		HVAC_Show_Modes_HeatCool[_position]     = 0;
-		HVAC_Show_Modes_HeatCoolAuto[_position] = 0;
-		HVAC_Show_FanModes[_position]           = _hasFanMode;
-		HVAC_Show_FanSpeeds[_position]          = _hasFanSpeed;
+		HVAC_Button_3_Visible[_position]        = 0;
+		HVAC_Button_3_Label[_position]          = "";
 
 	} ELSE IF (_type = HTYPE_HEATCOOL) {
 
 		HVAC_Name[_position]                    = _label;
-		HVAC_Show_Modes_AutoOff[_position]      = 0;
-		HVAC_Show_Modes_HeatCool[_position]     = 1;
-		HVAC_Show_Modes_HeatCoolAuto[_position] = 0;
-		HVAC_Show_FanModes[_position]           = _hasFanMode;
-		HVAC_Show_FanSpeeds[_position]          = _hasFanSpeed;
+		HVAC_Button_3_Visible[_position]        = 0;
+		HVAC_Button_3_Label[_position]          = "";		
 
 	} ELSE IF (_type = HTYPE_HEATCOOLAUTO) {
 
 		HVAC_Name[_position]                    = _label;
-		HVAC_Show_Modes_AutoOff[_position]      = 0;
-		HVAC_Show_Modes_HeatCool[_position]     = 0;
-		HVAC_Show_Modes_HeatCoolAuto[_position] = 1;
-        HVAC_Show_FanModes[_position]           = _hasFanMode;
-		HVAC_Show_FanSpeeds[_position]          = _hasFanSpeed;		
+		HVAC_Button_3_Visible[_position]        = 1;
+		HVAC_Button_3_Label[_position]          = "AUTO";		
+
+	} ELSE IF (_type = HTYPE_HEATCOOLOFF) {
+     
+		HVAC_Name[_position]                    = _label;
+		HVAC_Button_3_Visible[_position]        = 1;
+		HVAC_Button_3_Label[_position]          = "OFF";
 
 	}
+    
+	// Fan / Power Control
+	IF(_fanOrPower = HTYPE_FANPWR_NONE) {
+
+		HVAC_Button_4_Visible[_position]    = 0;
+		HVAC_Button_5_Visible[_position]    = 0;
+		HVAC_Show_FanPower_Label[_position] = 0;
+		HVAC_Button_4_Label[_position]      = "";
+		HVAC_Button_5_Label[_position]      = "";
+		HVAC_FanPower_Label[_position]	    = "";	
+
+	} ELSE IF(_fanOrPower = HTYPE_FANPWR_FAN) {
+                                           
+		HVAC_Button_4_Visible[_position]    = 1;
+		HVAC_Button_5_Visible[_position]    = 1;
+		HVAC_Show_FanPower_Label[_position] = 1;
+		HVAC_Button_4_Label[_position]      = "ON";
+		HVAC_Button_5_Label[_position]      = "AUTO";
+		HVAC_FanPower_Label[_position]      = "FAN MODE";
+
+	} ELSE IF(_fanOrPower = HTYPE_FANPWR_PWR) {
+          
+		HVAC_Button_4_Visible[_position]    = 1;
+		HVAC_Button_5_Visible[_position]    = 1;
+		HVAC_Show_FanPower_Label[_position] = 1;
+		HVAC_Button_4_Label[_position]      = "ON";
+		HVAC_Button_5_Label[_position]      = "OFF";
+		HVAC_FanPower_Label[_position]      = "POWER";
+
+	}
+
+	HVAC_Show_FanSpeeds[_position] = _hasFanSpeed;
 
 }
 
@@ -929,22 +1015,34 @@ CALLBACK FUNCTION HVACFbUpdateHandler(INTEGER _position, INTEGER _action, INTEGE
 	SWITCH(_action) {
 
     	CASE(SM_OFF_FB): {
-			HVAC_SystemMode_Off_Fb[_position] = _state;
+			//HVAC_SystemMode_Off_Fb[_position] = _state;
+			HVAC_Button_3_Fb[_position] = _state;
 		}
     	CASE(SM_COOL_FB): {
-			HVAC_SystemMode_Cool_Fb[_position] = _state;
+			//HVAC_SystemMode_Cool_Fb[_position] = _state;
+			HVAC_Button_1_Fb[_position] = _state;
 		}
     	CASE(SM_HEAT_FB): {
-			HVAC_SystemMode_Heat_Fb[_position] = _state;
+			//HVAC_SystemMode_Heat_Fb[_position] = _state;
+			HVAC_Button_2_Fb[_position] = _state;
 		}
     	CASE(SM_AUTO_FB): {
-			HVAC_SystemMode_Auto_Fb[_position] = _state;
+			//HVAC_SystemMode_Auto_Fb[_position] = _state;
+			HVAC_Button_3_Fb[_position] = _state;
 		}
-    	CASE(FM_ON_FB): {
-			HVAC_FanMode_On_Fb[_position] = _state;
+    	CASE(FM_ON_FB): { // Fan Mode On
+			//HVAC_FanMode_On_Fb[_position] = _state;
+			HVAC_Button_4_Fb[_position] = _state;
 		}
-    	CASE(FM_AUTO_FB): {
-			HVAC_FanMode_Auto_Fb[_position] = _state;
+    	CASE(FM_AUTO_FB): { // Fan Mode Auto
+			//HVAC_FanMode_Auto_Fb[_position] = _state;
+			HVAC_Button_5_Fb[_position] = _state;
+		}
+		CASE(H_PON_FB): { // Power On
+        	HVAC_Button_4_Fb[_position] = _state;
+		}
+		CASE(H_POF_FB): { // Power Off
+        	HVAC_Button_5_Fb[_position] = _state;
 		}
     	CASE(FS_LOW_FB): {
 			HVAC_FanSpeed_Low_Fb[_position] = _state;
@@ -1175,6 +1273,25 @@ CALLBACK FUNCTION TriggerSendLiftFbHandler(INTEGER output, INTEGER state) {
 	LiftControl_Button_Fb[output] = state;
 }
 
+CALLBACK FUNCTION VoiceControlEventHandler(INTEGER _val, STRING _event) {
+
+	IF(_event = "connected") {
+    	VoiceControl_Connected_Fb = _val;
+	} ELSE IF(_event = "registered") {
+        VoiceControl_Registered_Fb = _val;
+	} ELSE IF(_event = "ready") {
+		VoiceControl_Ready_Fb = _val;
+	}
+
+}
+
+CALLBACK FUNCTION VoiceControlIDEventHandler(STRING _id) {
+
+	VoiceControl_RegistrationID = _id;
+
+}
+
+
 CALLBACK SIMPLSHARPSTRING_FUNCTION AvailableZoneRequestHandler() {
 	RETURN (AvailableZones);
 }
@@ -1211,6 +1328,10 @@ PUSH Zone_VolumeDown {
 
 RELEASE Zone_VolumeDown {
     int.ZoneVolumeEvent(0, 0);
+}
+
+CHANGE Zone_VolumeDirect {
+	int.VolumeDirectInput(Zone_VolumeDirect);
 }
 
 PUSH Zone_Mute {
@@ -1377,25 +1498,19 @@ RELEASE Shade_View {
 
 PUSH HVAC_Setpoint_Up     { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SP_UP, 1); }
 PUSH HVAC_Setpoint_Down   { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SP_DOWN, 1); }
-PUSH HVAC_SystemMode_Off  { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_OFF, 1); }
-PUSH HVAC_SystemMode_Cool { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_COOL, 1); }
-PUSH HVAC_SystemMode_Heat { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_HEAT, 1); }
-PUSH HVAC_SystemMode_Auto { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_AUTO, 1); }
-PUSH HVAC_FanMode_On      { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FM_ON, 1); }
-PUSH HVAC_FanMode_Auto    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FM_AUTO, 1); }
 PUSH HVAC_FanSpeed_Low    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_LOW, 1); }
 PUSH HVAC_FanSpeed_Medium { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_MED, 1); }
 PUSH HVAC_FanSpeed_High   { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_HI, 1); }
 PUSH HVAC_FanSpeed_Max    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_MAX, 1); }
 
+CHANGE HVAC_Button_1      { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, H_BTN_1, HVAC_Button_1[GETLASTMODIFIEDARRAYINDEX()]); }
+CHANGE HVAC_Button_2      { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, H_BTN_2, HVAC_Button_2[GETLASTMODIFIEDARRAYINDEX()]); }
+CHANGE HVAC_Button_3      { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, H_BTN_3, HVAC_Button_3[GETLASTMODIFIEDARRAYINDEX()]); }
+CHANGE HVAC_Button_4      { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, H_BTN_4, HVAC_Button_4[GETLASTMODIFIEDARRAYINDEX()]); }
+CHANGE HVAC_Button_5      { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, H_BTN_5, HVAC_Button_5[GETLASTMODIFIEDARRAYINDEX()]); }
+
 RELEASE HVAC_Setpoint_Up     { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SP_UP, 0); }
 RELEASE HVAC_Setpoint_Down   { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SP_DOWN, 0); }
-RELEASE HVAC_SystemMode_Off  { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_OFF, 0); }
-RELEASE HVAC_SystemMode_Cool { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_COOL, 0); }
-RELEASE HVAC_SystemMode_Heat { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_HEAT, 0); }
-RELEASE HVAC_SystemMode_Auto { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, SM_AUTO, 0); }
-RELEASE HVAC_FanMode_On      { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FM_ON, 0); }
-RELEASE HVAC_FanMode_Auto    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FM_AUTO, 0); }
 RELEASE HVAC_FanSpeed_Low    { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_LOW, 0); }
 RELEASE HVAC_FanSpeed_Medium { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_MED, 0); }
 RELEASE HVAC_FanSpeed_High   { int.HVACEvent(GETLASTMODIFIEDARRAYINDEX()-1, FS_HI, 0); }
@@ -1440,6 +1555,7 @@ CHANGE Pool_Spa_Heater_Toggle  { int.PoolEvent(PLC_SPA_HT, Pool_Spa_Heater_Toggl
 CHANGE Pool_Filter_Pump_Toggle { int.PoolEvent(PLC_FILTER, Pool_Filter_Pump_Toggle, ""); }
 CHANGE Pool_Aux_Toggle         { int.PoolEvent(PLC_AUX, Pool_Aux_Toggle[GETLASTMODIFIEDARRAYINDEX()], ITOA(GETLASTMODIFIEDARRAYINDEX())); }
 
+PUSH VoiceControl_Send_RegCode { int.VoiceControlSendRegistrationCode(VoiceControl_RegistrationCode); }
 
 //=====// MAIN //=====//
 
@@ -1468,6 +1584,8 @@ FUNCTION Main() {
 	int.enableShadeControl         = EnableShadeControls;
 	int.enableHVACControl          = EnableHVACControls;
 	int.enableSecurityControl      = EnableSecurityControls;
+	int.enableVoiceControlSetup    = EnableVoiceControlSetup;
+	int.enableStartupEvents        = EnableStartupEvents;
 
 	REGISTERDELEGATE(int, UpdateDigitalOutput, UpdateDigitalOutputHandler);
 	REGISTERDELEGATE(int, UpdateAnalogOutput, UpdateAnalogOutputHandler);
@@ -1489,6 +1607,8 @@ FUNCTION Main() {
 	REGISTERDELEGATE(int, LightingPresetListUpdate, LightingPresetListUpdateHandler);
 	REGISTERDELEGATE(int, LightingLoadFbUpdate, LightingLoadFbUpdateHandler);
 	REGISTERDELEGATE(int, LightingPresetFbUpdate, LightingPresetFbUpdateHandler);
+
+	REGISTERDELEGATE(int, ZoneListLightsUpdate, ZoneListLightsUpdateHandler);
         
 	REGISTERDELEGATE(int, ShadeListUpdate, ShadeListUpdateHandler);
 	REGISTERDELEGATE(int, ShadeFbUpdate, ShadeFbUpdateHandler);
@@ -1501,6 +1621,9 @@ FUNCTION Main() {
 	REGISTERDELEGATE(int, SecurityKeypadTextFbUpdate, SecurityKeypadTextFbUpdateHandler);
     
 	REGISTERDELEGATE(int, PoolFbUpdate, PoolFbUpdateHandler);
+
+	REGISTERDELEGATE(int, VoiceControlEvent, VoiceControlEventHandler);
+	REGISTERDELEGATE(int, VoiceControlIDEvent, VoiceControlIDEventHandler);
 
 	IF(Core.RegisterInterface(InterfaceID, int) > 0) { 	
     	// Success!

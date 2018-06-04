@@ -9,7 +9,7 @@ namespace FrameWork {
     /**
      * Class:       Lift
      * @author:     Ryan French
-     * @version:    1.0
+     * @version:    1.3a
      * Description: ...
      */
     public class Lift {

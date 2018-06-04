@@ -275,10 +275,10 @@ FUNCTION Main () {
 
 	keyPad.CreateSecurityKeypad (Security_ID, Keypad_Name);
 
-	IF (Custom_01_Label != "") { keyPad.AddFunctionButton (0, Custom_01_Label); }
-	IF (Custom_02_Label != "") { keyPad.AddFunctionButton (1, Custom_02_Label); }
-	IF (Custom_03_Label != "") { keyPad.AddFunctionButton (2, Custom_03_Label); }
-	IF (Custom_04_Label != "") { keyPad.AddFunctionButton (3, Custom_04_Label); }
+	IF (Function_01_Label != "") { keyPad.AddFunctionButton (0, Function_01_Label); }
+	IF (Function_02_Label != "") { keyPad.AddFunctionButton (1, Function_02_Label); }
+	IF (Function_03_Label != "") { keyPad.AddFunctionButton (2, Function_03_Label); }
+	IF (Function_04_Label != "") { keyPad.AddFunctionButton (3, Function_04_Label); }
 
 	IF (Custom_01_Label != "") { keyPad.AddCustomButton (Custom_01_Label); }
 	IF (Custom_02_Label != "") { keyPad.AddCustomButton (Custom_02_Label); }

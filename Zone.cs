@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Crestron.SimplSharp;
 
 namespace FrameWork {
@@ -21,7 +22,11 @@ namespace FrameWork {
         public ushort currentSource = 0;
         public string currentSourceName { get { return Core.Sources.ContainsKey(currentSource) ? Core.Sources[currentSource].name : "Off"; } }
         public ushort volume = 0;
+
         public bool   muteState = false;
+        public bool   hasDirectVolume = false;
+        public bool   showInZoneList = false;   // New in 1.4
+
         public bool   powerIsOn { get { return currentSource > 0 ? true : false; } }
         public bool   powerIsOff { get { return currentSource == 0 ? true : false; } }
         public bool   hasAudio { get { return audioSources.Count > 0 ? true : false; } }
@@ -36,6 +41,7 @@ namespace FrameWork {
         public List<Source> videoSources;
         public List<Light>  lightingLoads;
         public List<Light>  lightingPresets;
+        public List<Light>  lightsInZone;
         public List<Shade>  shades;
         public List<HVAC>   hvacs;
 
@@ -43,6 +49,9 @@ namespace FrameWork {
         public Lift    lift;
 
         public List<Interface> subscribedInterfaces;
+
+        private CTimer lightStatusTimer;
+        private bool lightStatusTimerRunning;
 
         public DelegateString UpdateCurrentSourceName { get; set; }
         public DelegateUshort UpdateCurrentSourceID { get; set; }
@@ -59,6 +68,9 @@ namespace FrameWork {
         public event DelegateUshort UpdateMuteStateEvent;
         public event DelegateUshort UpdateDisplayAvailableEvent;
         public event DelegateUshort UpdateLiftAvailableEvent;
+
+        public delegate void UpdateLightsState(Zone zone, bool state);
+        public event UpdateLightsState UpdateLightsStateEvent;
 
         // ...
         internal delegate void UpdateZoneListSource(Zone zone, ushort sourceID, ushort sourceIcon, string sourceName);
@@ -78,6 +90,7 @@ namespace FrameWork {
         //public delegate SimplSharpString DelegateLightsRequest();
         public DelegateStringRequest LightsLoadRequest { get; set; }
         public DelegateStringRequest LightsPresetRequest { get; set; }
+        public DelegateStringRequest LightsFeedbackRequest { get; set; }
 
         // S+ delegate for requesting string-encoded list of Shades
         public DelegateStringRequest ShadesRequest { get; set; }
@@ -98,6 +111,7 @@ namespace FrameWork {
             videoSources    = new List<Source>();
             lightingLoads   = new List<Light>();
             lightingPresets = new List<Light>();
+            lightsInZone    = new List<Light>(); // Used for zone lights feedback
             shades          = new List<Shade>();
             hvacs           = new List<HVAC>();
 
@@ -113,10 +127,29 @@ namespace FrameWork {
          * @param:      ushort _sid
          * Description: Called by S+ to set Zone variables
          */
-        public void CreateZone (ushort _id, string _name) {
+        public void CreateZone (ushort _id, string _name, ushort _directVol) {
 
-            this.id   = _id;
-            this.name = _name;
+            this.id              = _id;
+            this.name            = _name;
+            this.hasDirectVolume = _directVol == 1 ? true : false;
+
+        }
+
+        /**
+         * Method:      registerAssets
+         * Access:      public
+         * Description: Called by Core during startup to finish initializing Zones
+         */
+        public void registerAssets() {
+
+            this.ParseAudioSources();
+            this.ParseVideoSources();
+            this.ParseLights();
+            this.ParseShades();
+            this.ParseHVAC();
+
+            Core.ConsoleMessage(String.Format("[STARTUP] Finished referencing assets on Zone {0} [{1}]", this.id, this.name));
+            Core.RegCompleteCallback(1);
 
         }
 
@@ -151,6 +184,10 @@ namespace FrameWork {
             // Register Zone with Source
             if (_sid != 0)
                 Core.Sources[_sid].RegisterZone (this);
+
+            // Send Direct Volume Off when powered off
+            if (_sid == 0)
+                this.SetMuteState(0);
 
         }
 
@@ -266,6 +303,15 @@ namespace FrameWork {
         }
 
         /**
+         * Method:      VolumeMuteToggle
+         * Access:      public
+         * Description: ...
+         */
+        public void VolumeMuteToggle(ushort _state) {
+            SendZoneCommand(14, _state);
+        }
+
+        /**
          * Method:      VolumeUpDownUshort
          * Access:      public
          * @param:      ushort _direction, ushort _state
@@ -313,18 +359,26 @@ namespace FrameWork {
          *              from S+ module. Looks up SourceID's in Core.Sources and adds to local list.
          */
         public void ParseAudioSources() {
+
             string lTmp = AudioSourcesRequest().ToString();
 
             if (lTmp == "")
                 return;
 
-            string[] list = lTmp.Replace(" ", "").Split(',');
-            ushort sid;
-            for (int i = 0; i < list.Length; i++) {
-                sid = ushort.Parse(list[i]);
-                if(Core.Sources.ContainsKey(sid))
-                    audioSources.Add(Core.Sources[sid]);
+            // Error check list
+            Regex r = new Regex("[^0-9,]$");
+            if (r.IsMatch(lTmp)) {
+                Core.ConsoleMessage(String.Format("[ERROR] Invalid characters in Audio Source list in Zone {0} [{1}].", this.id, this.name));
+            } else {
+                string[] list = lTmp.Replace(" ", "").Split(',');
+                ushort sid;
+                for (int i = 0; i < list.Length; i++) {
+                    sid = ushort.Parse(list[i]);
+                    if (Core.Sources.ContainsKey(sid))
+                        audioSources.Add(Core.Sources[sid]);
+                }
             }
+
         }
 
         /**
@@ -339,13 +393,20 @@ namespace FrameWork {
             if (lTmp == "")
                 return;
 
-            string[] list = lTmp.Replace(" ", "").Split(',');
-            ushort sid;
-            for (int i = 0; i < list.Length; i++) {
-                sid = ushort.Parse(list[i]);
-                if (Core.Sources.ContainsKey(sid))
-                    videoSources.Add(Core.Sources[sid]);
+            // Error check list
+            Regex r = new Regex("[^0-9,]$");
+            if (r.IsMatch(lTmp)) {
+                Core.ConsoleMessage(String.Format("[ERROR] Invalid characters in Video Source list in Zone {0} [{1}].", this.id, this.name));
+            } else {
+                string[] list = lTmp.Replace(" ", "").Split(',');
+                ushort sid;
+                for (int i = 0; i < list.Length; i++) {
+                    sid = ushort.Parse(list[i]);
+                    if (Core.Sources.ContainsKey(sid))
+                        videoSources.Add(Core.Sources[sid]);
+                }
             }
+
         }
 
         /**
@@ -355,18 +416,26 @@ namespace FrameWork {
          *              from S+ module. Looks up LightID's in Core.Lights and adds to local list.
          */
         public void ParseLights() {
+
+            ushort lid;
+
             // Loads
             string lTmp = LightsLoadRequest().ToString();
 
             if (lTmp == "")
                 return;
 
-            string[] list = lTmp.Replace(" ", "").Split(',');
-            ushort lid;
-            for (int i = 0; i < list.Length; i++) {
-                lid = ushort.Parse(list[i]);
-                if (Core.Lights.ContainsKey(lid))
-                    lightingLoads.Add(Core.Lights[lid]);
+            // Error check list
+            Regex r = new Regex("[^0-9,]$");
+            if (r.IsMatch(lTmp)) {
+                Core.ConsoleMessage(String.Format("[ERROR] Invalid characters in Lighting Load list in Zone {0} [{1}].", this.id, this.name));
+            } else {
+                string[] list = lTmp.Replace(" ", "").Split(',');
+                for (int i = 0; i < list.Length; i++) {
+                    lid = ushort.Parse(list[i]);
+                    if (Core.Lights.ContainsKey(lid))
+                        lightingLoads.Add(Core.Lights[lid]);
+                }
             }
 
             // Presets
@@ -375,12 +444,38 @@ namespace FrameWork {
             if (pTmp == "")
                 return;
 
-            string[] plist = pTmp.Replace(" ", "").Split(',');
-            for (int i = 0; i < plist.Length; i++) {
-                lid = ushort.Parse(plist[i]);
-                if (Core.Lights.ContainsKey(lid))
-                    lightingPresets.Add(Core.Lights[lid]);
+            if (r.IsMatch(pTmp)) {
+                Core.ConsoleMessage(String.Format("[ERROR] Invalid characters in Lighting Preset list in Zone {0} [{1}].", this.id, this.name));
+            } else {
+                string[] plist = pTmp.Replace(" ", "").Split(',');
+                for (int i = 0; i < plist.Length; i++) {
+                    lid = ushort.Parse(plist[i]);
+                    if (Core.Lights.ContainsKey(lid))
+                        lightingPresets.Add(Core.Lights[lid]);
+                }
             }
+
+            // LightsInZone
+            string fTmp = LightsFeedbackRequest().ToString();
+
+            if (fTmp == "")
+                return;
+
+            if (r.IsMatch(fTmp)) {
+                Core.ConsoleMessage(String.Format("[ERROR] Invalid characters in Lighting Feedback list in Zone {0} [{1}].", this.id, this.name));
+            } else {
+                string[] flist = fTmp.Replace(" ", "").Split(',');
+                for (int i = 0; i < flist.Length; i++) {
+                    lid = ushort.Parse(flist[i]);
+                    if (Core.Lights.ContainsKey(lid)) {
+                        lightsInZone.Add(Core.Lights[lid]);
+
+                        // Subscribe to Light update event
+                        Core.Lights[lid].UpdateEvent += this.ZoneLightEvent;
+                    }
+                }
+            }
+
         }
 
         /**
@@ -396,12 +491,18 @@ namespace FrameWork {
             if (lTmp == "")
                 return;
 
-            string[] list = lTmp.Replace(" ", "").Split(',');
-            ushort sid;
-            for (int i = 0; i < list.Length; i++) {
-                sid = ushort.Parse(list[i]);
-                if (Core.Shades.ContainsKey(sid))
-                    shades.Add(Core.Shades[sid]);
+            // Error check list
+            Regex r = new Regex("[^0-9,]$");
+            if (r.IsMatch(lTmp)) {
+                Core.ConsoleMessage(String.Format("[ERROR] Invalid characters in Shade list in Zone {0} [{1}].", this.id, this.name));
+            } else {
+                string[] list = lTmp.Replace(" ", "").Split(',');
+                ushort sid;
+                for (int i = 0; i < list.Length; i++) {
+                    sid = ushort.Parse(list[i]);
+                    if (Core.Shades.ContainsKey(sid))
+                        shades.Add(Core.Shades[sid]);
+                }
             }
 
         }
@@ -419,12 +520,18 @@ namespace FrameWork {
             if (lTmp == "")
                 return;
 
-            string[] list = lTmp.Replace(" ", "").Split(',');
-            ushort hid;
-            for (int i = 0; i < list.Length; i++) {
-                hid = ushort.Parse(list[i]);
-                if (Core.HVACs.ContainsKey(hid))
-                    hvacs.Add(Core.HVACs[hid]);
+            // Error check list
+            Regex r = new Regex("[^0-9,]$");
+            if (r.IsMatch(lTmp)) {
+                Core.ConsoleMessage(String.Format("[ERROR] Invalid characters in HVAC list in Zone {0} [{1}].", this.id, this.name));
+            } else {
+                string[] list = lTmp.Replace(" ", "").Split(',');
+                ushort hid;
+                for (int i = 0; i < list.Length; i++) {
+                    hid = ushort.Parse(list[i]);
+                    if (Core.HVACs.ContainsKey(hid))
+                        hvacs.Add(Core.HVACs[hid]);
+                }
             }
 
         }
@@ -462,6 +569,49 @@ namespace FrameWork {
 
             if (UpdateLiftAvailableEvent != null)
                 UpdateLiftAvailableEvent(1);
+        }
+
+        /**
+         * Method:      ZoneLightEvent
+         * Access:      public
+         * Description: Called by event hook in subscribed Lights to recalculate room feedback when a light
+         *              is turned on or off. Starts or prolongs a debounce timer to prevent unnecessary 
+         *              redundant checks for room lighting feedback when many lights change state at once.
+         */
+        private void ZoneLightEvent() {
+
+            // If timer isn't already running, start it, otherwise restart it
+            if (!lightStatusTimerRunning) {
+                lightStatusTimer = new CTimer(lightStatusTimerHandler, 1500);
+                lightStatusTimerRunning = true;
+            } else {
+                lightStatusTimer.Stop();
+                lightStatusTimer.Reset(1500);
+            }
+
+        }
+
+        /**
+         * Method:      lightStatusTimerHandler
+         * Access:      public
+         * Description: Timer handler for ZoneLightEvent. Recalculates room feedback when a light
+         *              is turned on or off.
+         */
+        private void lightStatusTimerHandler(object o) {
+
+            lightStatusTimerRunning = false;
+
+            bool lightsOn = false;
+
+            for (int i = 0; i < lightsInZone.Count; i++) {
+                if (lightsInZone[i].isOn)
+                    lightsOn = true;
+            }
+
+            // Send light fb state to Interfaces
+            if (this.UpdateLightsStateEvent != null)
+                UpdateLightsStateEvent(this, lightsOn);
+
         }
 
         /**

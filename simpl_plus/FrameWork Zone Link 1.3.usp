@@ -6,10 +6,12 @@ CHANGELOG:
 
 1.2 - 7/11/17 - Added Lights parameter, SIMPL# integration.
 1.2b - 8/2/17 - Added Mute Off command when Volume button pressed.
+1.2c - 8/8/17 - Added InUse feedback
+1.2d - 8/22/17 - Added Direct Volume parameter
 
 */
 
-#SYMBOL_NAME "FrameWork Zone Link 1.2b"
+#SYMBOL_NAME "FrameWork Zone Link 1.3"
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
 #ENABLE_TRACE
@@ -20,6 +22,7 @@ CHANGELOG:
 
 #DEFINE_CONSTANT DJ_HWVOLUMEUP 11
 #DEFINE_CONSTANT DJ_HWVOLUMEDN 12
+#DEFINE_CONSTANT DJ_HWMUTETOG  14
 
 //=====// I/O //=====//
 
@@ -29,6 +32,9 @@ DIGITAL_INPUT _SKIP_,
 			  _SKIP_,
 			  _SKIP_,
 			  _SKIP_, 
+			  _SKIP_,
+			  _SKIP_,
+			  _SKIP_,
 			  _SKIP_,
 			  MuteOn, 
 			  MuteOff, 
@@ -45,13 +51,17 @@ DIGITAL_OUTPUT _SKIP_,
 			   _SKIP_,
 			   _SKIP_, 
 			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
+			   _SKIP_,
 			   Mute_Fb, 
 			   Display_Available, 
 			   AudioDevice_VolumeUp, 
 			   AudioDevice_VolumeDown, 
 			   AudioDevice_MuteOn, 
 			   AudioDevice_MuteOff, 
-			   AudioDevice_MuteToggle;
+			   AudioDevice_MuteToggle,
+			   InUse;
 
 ANALOG_OUTPUT CurrentSource_ID, 
 			  VolumeLevel, 
@@ -64,10 +74,12 @@ STRING_PARAMETER  ZoneName[32],
 				  VideoSources[72],
 				  LightingLoads[256],
 				  LightingPresets[256],
+				  LightsForZoneFb[256],
 				  Shades[256],
 				  HVAC_Zones[256];
 
-INTEGER_PARAMETER RoomID;
+INTEGER_PARAMETER RoomID,
+				  HasDirectVolume;
 
 //=====// VARIABLES //=====//
 
@@ -122,7 +134,16 @@ CALLBACK FUNCTION SendZoneCommandHandler(INTEGER _join, INTEGER _state) {
 				UpdateHWMuteStateHandler(0);
         	AudioDevice_VolumeDown = _state;
 		}
+		CASE(DJ_HWMUTETOG): {
+			AudioDevice_MuteToggle = _state;
+		}
 	}
+}
+
+CALLBACK FUNCTION InUseFbHandler (INTEGER _state) {
+
+	InUse = _state;
+
 }
 
 CALLBACK SIMPLSHARPSTRING_FUNCTION AudioSourcesRequestHandler() {
@@ -139,6 +160,10 @@ CALLBACK SIMPLSHARPSTRING_FUNCTION LightsLoadRequestHandler() {
 
 CALLBACK SIMPLSHARPSTRING_FUNCTION LightsPresetRequestHandler() {
 	RETURN(LightingPresets);
+}
+
+CALLBACK SIMPLSHARPSTRING_FUNCTION LightsFeedbackRequestHandler() {
+	RETURN(LightsForZoneFb);
 }
 
 CALLBACK SIMPLSHARPSTRING_FUNCTION ShadesRequestHandler() {
@@ -187,7 +212,7 @@ FUNCTION Main() {
 
 	WAITFORINITIALIZATIONCOMPLETE();
 
-	Zn.CreateZone(RoomID, ZoneName);
+	Zn.CreateZone(RoomID, ZoneName, HasDirectVolume);
 
 	REGISTERDELEGATE(Zn, UpdateCurrentSourceName, UpdateCurrentSourceNameHandler);
     REGISTERDELEGATE(Zn, UpdateCurrentSourceID, UpdateCurrentSourceIDHandler);
@@ -203,10 +228,13 @@ FUNCTION Main() {
 
 	REGISTERDELEGATE(Zn, LightsLoadRequest, LightsLoadRequestHandler);
 	REGISTERDELEGATE(Zn, LightsPresetRequest, LightsPresetRequestHandler);
+	REGISTERDELEGATE(Zn, LightsFeedbackRequest, LightsFeedbackRequestHandler);
 
 	REGISTERDELEGATE(Zn, ShadesRequest, ShadesRequestHandler);
 
 	REGISTERDELEGATE(Zn, HVACRequest, HVACRequestHandler);
+
+	REGISTERDELEGATE(Zn, InUseFb, InUseFbHandler);
 
 
 	IF(Core.RegisterZone(Zn) > 0) {

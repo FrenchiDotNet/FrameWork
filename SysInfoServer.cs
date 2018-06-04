@@ -10,7 +10,7 @@ namespace FrameWork {
     /**
      * Class:       SysInfoServer
      * @author:     Ryan French
-     * @version:    1.0
+     * @version:    1.3a
      * Description: ...
      */
     public class SysInfoServer {
@@ -30,11 +30,13 @@ namespace FrameWork {
         //===================// Constructor //===================//
 
         public SysInfoServer(int _port, int _buffer) {
+
             this.port       = _port;
             this.bufferSize = _buffer;
 
             this.Debug = new DebugConsole("[SysInfoServer]");
             this.Debug.debugEnabled = true;
+
         }
 
         //===================// Methods //===================//
@@ -46,10 +48,12 @@ namespace FrameWork {
          * Description: Create TCPServer object and register event handlers.
          */
         public void startServer() {
+
             Server = new TCPServer("0.0.0.0", port, bufferSize, EthernetAdapterType.EthernetLANAdapter, 1);
             Server.SocketStatusChange += new TCPServerSocketStatusChangeEventHandler(socketStatusHandler);
             Server.WaitForConnectionAsync(new TCPServerClientConnectCallback(clientConnectHandler));
             Debug.print("Started Server on port "+port);
+
         }
 
         /**
@@ -59,9 +63,11 @@ namespace FrameWork {
          * Description: Disconnect all socket clients and remove event handlers.
          */
         public void stopServer() {
+
             Server.DisconnectAll();
             Server.SocketStatusChange -= socketStatusHandler;
             Debug.print("Stopped Server.");
+
         }
 
         /**
@@ -74,9 +80,11 @@ namespace FrameWork {
          *              listens for a new connection.
          */
         private void replyAndEndConnection(string _msg, uint _cli) {
+
             Server.SendData(_cli, Encoding.ASCII.GetBytes(_msg), _msg.Length);
             Server.Disconnect(_cli);
             Server.WaitForConnectionAsync(new TCPServerClientConnectCallback(clientConnectHandler));
+
         }
 
         /**
@@ -88,9 +96,11 @@ namespace FrameWork {
          * Description: Encodes and transmits string _msg to connected client _cli, then listens for new data.
          */
         private void replyAndWait(string _msg, uint _cli) {
+
             Server.SendData(_cli, Encoding.ASCII.GetBytes(_msg), _msg.Length);
             Server.SendData(_cli, Encoding.ASCII.GetBytes("\r\n>> "), 5);
             Server.ReceiveDataAsync(new TCPServerReceiveCallback(serverReceiveCallback));
+
         }
 
         /**
@@ -102,6 +112,8 @@ namespace FrameWork {
          * Description: Check incoming command against a list of supported terms.
          */
         private void ParseRequest(string _cmd, uint _cli) {
+            
+            int count;
             string command, reply;
             string[] args, sTmp;
             reply = "";
@@ -114,13 +126,15 @@ namespace FrameWork {
             // Check for supported functions
             switch (command.ToLower()) {
                 case "getroomlist":
-                    foreach(KeyValuePair<ushort, Zone> zn in Core.Zones) {
-                        reply += String.Format("[{0}] {1}\r\n", zn.Value.id, zn.Value.name);
+                    count = Core.ZoneList.Count;
+                    for(int i = 0; i < count; i++) {
+                        reply += String.Format("[{0}] {1}\r\n", Core.ZoneList[i].id, Core.ZoneList[i].name);
                     }
                     break;
                 case "getsourcelist":
-                    foreach(KeyValuePair<ushort, Source> src in Core.Sources) {
-                        reply += String.Format("[{0}] {1}\r\n", src.Value.id, src.Value.name);
+                    count = Core.SourceList.Count;
+                    for (int i = 0; i < count; i++) {
+                        reply += String.Format("[{0}] {1}\r\n", Core.SourceList[i].id, Core.SourceList[i].name);
                     }
                     break;
                 case "getroomstatus":
@@ -154,28 +168,33 @@ namespace FrameWork {
                     reply = cmdDisplayCmd(args);
                     break;
                 case "getlightslist":
-                    foreach (KeyValuePair<ushort, Light> lite in Core.Lights) {
-                        reply += String.Format("[{0}] {1}\r\n", lite.Value.id, lite.Value.name);
+                    count = Core.LightList.Count;
+                    for (int i = 0; i < count; i++) {
+                        reply += String.Format("[{0}] {1}\r\n", Core.LightList[i].id, Core.LightList[i].name);
                     }
                     break;
                 case "getshadeslist":
-                    foreach (KeyValuePair<ushort, Shade> shd in Core.Shades) {
-                        reply += String.Format("[{0}] {1}\r\n", shd.Value.id, shd.Value.name);
+                    count = Core.ShadeList.Count;
+                    for (int i = 0; i < count; i++) {
+                        reply += String.Format("[{0}] {1}\r\n", Core.ShadeList[i].id, Core.ShadeList[i].name);
                     }
                     break;
                 case "gethvaclist":
-                    foreach (KeyValuePair<ushort, HVAC> hvc in Core.HVACs) {
-                        reply += String.Format("[{0}] {1}\r\n", hvc.Value.id, hvc.Value.name);
+                    count = Core.HVACList.Count;
+                    for (int i = 0; i < count; i++) {
+                        reply += String.Format("[{0}] {1}\r\n", Core.HVACList[i].id, Core.HVACList[i].name);
                     }
                     break;
                 case "getinterfacelist":
-                    foreach (KeyValuePair<ushort, Interface> inf in Core.Interfaces) {
-                        reply += String.Format("[{0}] {1}\r\n", inf.Value.id, inf.Value.name);
+                    count = Core.InterfaceList.Count;
+                    for (int i = 0; i < count; i++) {
+                        reply += String.Format("[{0}] {1}\r\n", Core.InterfaceList[i].id, Core.InterfaceList[i].name);
                     }
                     break;
                 case "getsecuritylist":
-                    foreach (KeyValuePair<ushort, SecurityKeypad> kp in Core.SecurityKeypads) {
-                        reply += String.Format("[{0}] {1}\r\n", kp.Value.id, kp.Value.name);
+                    count = Core.SecurityKeypadList.Count;
+                    for (int i = 0; i < count; i++) {
+                        reply += String.Format("[{0}] {1}\r\n", Core.SecurityKeypadList[i].id, Core.SecurityKeypadList[i].name);
                     }
                     break;
                 case "getinterfacesecurity":
@@ -208,6 +227,7 @@ namespace FrameWork {
             }
 
             replyAndWait(reply, _cli);
+
         }
 
         /**

@@ -4,6 +4,12 @@ using Crestron.SimplSharp;
 
 namespace FrameWork {
 
+    /**
+     * Class:       Pool
+     * @author:     Ryan French
+     * @version:    1.3a
+     * Description: ...
+     */
     public class Pool {
 
         public PoolMode currentMode;
@@ -101,16 +107,16 @@ namespace FrameWork {
                     currentPoolSetpoint = float.Parse(_text);
                     break;
                 case PoolCommand.Pool_Temp_Fb:
-                    currentPoolTemp = float.Parse(_text); ;
+                    currentPoolTemp = float.Parse(_text);
                     break;
                 case PoolCommand.Spa_Setpoint_Fb:
-                    currentSpaSetpoint = float.Parse(_text); ;
+                    currentSpaSetpoint = float.Parse(_text);
                     break;
                 case PoolCommand.Spa_Temp_Fb:
-                    currentSpaTemp = float.Parse(_text); ;
+                    currentSpaTemp = float.Parse(_text);
                     break;
                 case PoolCommand.Ambient_Temp_Fb:
-                    currentAmbientTemp = float.Parse(_text); ;
+                    currentAmbientTemp = float.Parse(_text);
                     break;
                 case PoolCommand.System_Type:
                     systemType = _state;

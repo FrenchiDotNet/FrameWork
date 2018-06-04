@@ -3,7 +3,7 @@ Dealer Name: Ask The Advisors
 Programmer: Ryan French
 */
 
-#SYMBOL_NAME "FrameWork HVAC Link 1.2"
+#SYMBOL_NAME "FrameWork HVAC Link 1.3"
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
 #ENABLE_TRACE
@@ -37,10 +37,23 @@ Programmer: Ryan French
 #DEFINE_CONSTANT T_SETPOINT  26
 #DEFINE_CONSTANT T_AMBIENT   27
 #DEFINE_CONSTANT INUSESTATE  28
+#DEFINE_CONSTANT H_PON_FB    29
+#DEFINE_CONSTANT H_POF_FB    30
+#DEFINE_CONSTANT H_PON       31
+#DEFINE_CONSTANT H_POF       32
+#DEFINE_CONSTANT BUTTON_1    33
+#DEFINE_CONSTANT BUTTON_2    34
+#DEFINE_CONSTANT BUTTON_3    35
+#DEFINE_CONSTANT BUTTON_4    36
+#DEFINE_CONSTANT BUTTON_5    37
 
 #DEFINE_CONSTANT TYPE_AUTO         1
 #DEFINE_CONSTANT TYPE_HEATCOOL     2
 #DEFINE_CONSTANT TYPE_HEATCOOLAUTO 3
+#DEFINE_CONSTANT TYPE_HEATCOOLOFF  4
+#DEFINE_CONSTANT TYPE_FANPWR_NONE  5
+#DEFINE_CONSTANT TYPE_FANPWR_FAN   6
+#DEFINE_CONSTANT TYPE_FANPWR_PWR   7
 
 //=====// I/O //=====//
 
@@ -53,6 +66,8 @@ DIGITAL_INPUT  _SKIP_,
 			   SystemMode_Cool_Fb,
 			   SystemMode_Heat_Fb,
 			   SystemMode_Auto_Fb,
+			   Power_On_Fb,
+			   Power_Off_Fb,
 			   FanMode_Auto_Fb,
 			   FanMode_On_Fb,
 			   FanSpeed_Low_Fb,
@@ -71,6 +86,8 @@ DIGITAL_OUTPUT _SKIP_,
 			   SystemMode_Cool,
 			   SystemMode_Heat,
 			   SystemMode_Auto,
+			   Power_On,
+			   Power_Off,
 			   FanMode_Auto,
 			   FanMode_On,
 			   FanSpeed_Low,
@@ -86,7 +103,7 @@ STRING_PARAMETER  HVAC_Name[32];
 
 INTEGER_PARAMETER HVAC_ID,
 				  HVAC_Type,
-				  HasFanModeControl,
+				  FanOrPower,
 				  HasFanSpeedControl;
 
 //=====// VARIABLES //=====//
@@ -136,7 +153,37 @@ CALLBACK FUNCTION TriggerSendCommandHandler (INTEGER _action, INTEGER _state) {
             FanSpeed_Max    = _state;
 		}
 		CASE(INUSESTATE): {
-        	InUse = _state;
+        	InUse           = _state;
+		}
+		CASE(H_PON): {
+            Power_On        = _state;
+		}
+		CASE(H_POF): {
+            Power_Off       = _state;
+		}
+		CASE(BUTTON_1): {
+        	SystemMode_Cool = _state;
+		}
+		CASE(BUTTON_2): {
+            SystemMode_Heat = _state;
+		}
+		CASE(BUTTON_3): {
+            IF(HVAC_Type = TYPE_HEATCOOLAUTO)
+				SystemMode_Auto = _state;
+			IF(HVAC_Type = TYPE_HEATCOOLOFF)
+				SystemMode_Off  = _state;
+		}
+		CASE(BUTTON_4): {
+            IF(FanOrPower = TYPE_FANPWR_FAN)
+				FanMode_On = _state;
+			IF(FanOrPower = TYPE_FANPWR_PWR)
+                Power_On = _state;
+		}
+		CASE(BUTTON_5): {
+            IF(FanOrPower = TYPE_FANPWR_FAN)
+                FanMode_Auto = _state;
+			IF(FanOrPower = TYPE_FANPWR_PWR)
+                Power_Off = _state;
 		}
 
 	}
@@ -149,6 +196,9 @@ CHANGE SystemMode_Off_Fb  { ac.FeedbackEvent(SM_OFF_FB, SystemMode_Off_Fb); }
 CHANGE SystemMode_Cool_Fb { ac.FeedbackEvent(SM_COOL_FB, SystemMode_Cool_Fb); }
 CHANGE SystemMode_Heat_Fb { ac.FeedbackEvent(SM_HEAT_FB, SystemMode_Heat_Fb); }
 CHANGE SystemMode_Auto_Fb { ac.FeedbackEvent(SM_AUTO_FB, SystemMode_Auto_Fb); }
+
+CHANGE Power_On_Fb        { ac.FeedbackEvent(H_PON_FB, Power_On_Fb); }
+CHANGE Power_Off_Fb       { ac.FeedbackEvent(H_POF_FB, Power_Off_Fb); }
 
 CHANGE FanMode_Auto_Fb    { ac.FeedbackEvent(FM_AUTO_FB, FanMode_Auto_Fb); }
 CHANGE FanMode_On_Fb      { ac.FeedbackEvent(FM_ON_FB, FanMode_On_Fb); }
@@ -167,7 +217,7 @@ FUNCTION Main () {
 
 	WAITFORINITIALIZATIONCOMPLETE ();
 
-	ac.CreateHVAC (HVAC_ID, HVAC_Name, HVAC_Type, HasFanModeControl, HasFanSpeedControl);
+	ac.CreateHVAC (HVAC_ID, HVAC_Name, HVAC_Type, FanOrPower, HasFanSpeedControl);
 
 	REGISTERDELEGATE (ac, TriggerSendCommand, TriggerSendCommandHandler);
 

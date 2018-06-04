@@ -1,0 +1,33 @@
+/*
+Dealer Name: Ask The Advisors
+Programmer: Ryan French
+*/
+
+#SYMBOL_NAME "FrameWork Zone Injector 1.0"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#USER_SIMPLSHARP_LIBRARY "FrameWork"
+
+//=====// I/O //=====//
+
+ANALOG_INPUT Source_Select;
+
+INTEGER_PARAMETER ZoneID;
+
+//=====// VARIABLES //=====//
+
+//=====// FUNCTIONS //=====//
+
+//=====// EVENTS //=====//                  
+
+CHANGE Source_Select {
+
+	Core.SetZoneSource(ZoneID, Source_Select);
+
+}
+
+//=====// MAIN //=====//
+
+
+

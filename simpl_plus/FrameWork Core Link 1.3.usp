@@ -3,7 +3,7 @@ Dealer Name: Ask The Advisors
 Programmer: Ryan French
 */
 
-#SYMBOL_NAME "FrameWork Core Link 1.0"
+#SYMBOL_NAME "FrameWork Core Link 1.3"
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
 #ENABLE_TRACE
@@ -25,7 +25,7 @@ INTEGER_PARAMETER _SKIP_,
 
 //=====// FUNCTIONS //=====//
 
-CALLBACK FUNCTION startupCompleteEventHandler (INTEGER _eventID) {
+CALLBACK FUNCTION startupCompleteHandler () {
 	Initialization_Complete = 1;
 }
 
@@ -37,7 +37,7 @@ FUNCTION Main () {
 
 	WAITFORINITIALIZATIONCOMPLETE();
 
-	REGISTERDELEGATE (Core, startupCompleteEvent, startupCompleteEventHandler);
+	REGISTERDELEGATE (Core, startupComplete, startupCompleteHandler);
 
 	Core.ConfigureSysInfoServer (SysInfo_Server_Port);
 

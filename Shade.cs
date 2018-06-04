@@ -9,7 +9,7 @@ namespace FrameWork {
     /**
      * Class:       Shade
      * @author:     Ryan French
-     * @version:    1.0
+     * @version:    1.3a
      * Description: Class for storing details and control functions for an individual shade.
      */
     public class Shade {

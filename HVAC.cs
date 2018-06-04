@@ -9,7 +9,7 @@ namespace FrameWork {
     /**
      * Class:       HVAC
      * @author:     Ryan French
-     * @version:    1.0
+     * @version:    1.3a
      * Description: Class for storing details and control functions for an individual HVAC zone.
      */
     public class HVAC {
@@ -19,9 +19,11 @@ namespace FrameWork {
         public ushort id;
         public string name;
         public HVACControlType controlType;
+        public HVACControlType fanOrPower;
 
-        public bool hasFanModeControl;
+        //public bool hasFanModeControl;
         public bool hasFanSpeedControl;
+        public bool powerIsOn;
 
         public ushort currentSetpointTemp;
         public ushort currentAmbientTemp;
@@ -59,12 +61,13 @@ namespace FrameWork {
         * Access: public
         * Description: Populate object with values passed from S+
         */
-        public void CreateHVAC(ushort _id, string _name, ushort _controlType, ushort _hasFanModeControl, ushort _hasFanSpeedControl) {
+        public void CreateHVAC(ushort _id, string _name, ushort _controlType, ushort _fanOrPower, ushort _hasFanSpeedControl) {
 
             this.id                 = _id;
             this.name               = _name;
             this.controlType        = (HVACControlType)_controlType;
-            this.hasFanModeControl  = _hasFanModeControl == 1 ? true : false;
+            this.fanOrPower         = (HVACControlType)_fanOrPower;
+            //this.hasFanModeControl  = _hasFanModeControl == 1 ? true : false;
             this.hasFanSpeedControl = _hasFanSpeedControl == 1 ? true : false;
 
         }
@@ -135,6 +138,12 @@ namespace FrameWork {
                 case HVACCommand.TempAmbient:
                     currentAmbientTemp = _state;
                     break;
+                case HVACCommand.Power_On_Fb:
+                    powerIsOn = true;
+                    break;
+                case HVACCommand.Power_Off_Fb:
+                    powerIsOn = false;
+                    break;
 
             }
 
@@ -190,9 +199,14 @@ namespace FrameWork {
     } // End HVAC Class
 
     public enum HVACControlType {
+        Unknown,
         Auto,
         HeatCool,
-        HeatCoolAuto
+        HeatCoolAuto,
+        HeatCoolOff,
+        FanPwr_None,
+        FanPwr_Fan,
+        FanPwr_Pwr
     }
 
     public enum HVACCommand {
@@ -224,7 +238,16 @@ namespace FrameWork {
         FanCall_Fb,
         TempSetpoint,
         TempAmbient,
-        InUseState
+        InUseState,
+        Power_On_Fb,
+        Power_Off_Fb,
+        Power_On,
+        Power_Off,
+        Button_1,
+        Button_2,
+        Button_3,
+        Button_4,
+        Button_5
     }
 
 }
